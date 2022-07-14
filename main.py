@@ -325,11 +325,11 @@ class ScheduleMessage():
 
 
 # Send today employers message to SM/POISK chat groups
-schedule.every().day.at("08:00").do(send_today_employers, chat_id = config.GROUP_CHAT_ID)
+schedule.every().day.at("08:00").do(send_today_employers, chat_id = config.GROUP_CHAT_ID_SM)
 schedule.every().day.at("08:00").do(send_today_employers, chat_id = config.GROUP_CHAT_ID_POISK)
 
 # Send today lunch-poll message to SM/POISK chat groups
-schedule.every().day.at("10:00").do(send_lunch_query, chat_id = config.GROUP_CHAT_ID)
+schedule.every().day.at("10:00").do(send_lunch_query, chat_id = config.GROUP_CHAT_ID_SM)
 schedule.every().day.at("10:00").do(send_lunch_query, chat_id = config.GROUP_CHAT_ID_POISK)
 
 

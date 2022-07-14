@@ -1,4 +1,4 @@
 sm_bot_venv
-config.py
 __pycache__
 .pylintrc
+test.py
