@@ -166,6 +166,13 @@ def send_lunch_query(chat_id):
     except Exception as error:
         logger.error(error, exc_info = True)
 
+# Get log n str
+def get_log_str(log_name, lines):
+    with open(log_name, encoding='utf-8') as file:
+        result = ''
+        for line in (file.readlines()[-lines:]):
+            result += line
+    return result
 
 ###########################
 ## Telegram Bot Handlers ##
@@ -293,15 +300,17 @@ def get_out(message):
 # Get log into chat
 @bot.message_handler(commands=['log'])
 def get_log(message):
+    value = (message.text).replace('/log ', '') # Number after /log message
+    lines = 5 if value == '/log' else int(value) # 30 - default value, if value in message is empty
+    log_to_bot = get_log_str(log_name='telegram-bot.log', lines=lines)
     try:
-        readed_log = os.system("tail -n 30 telegram-bot.log")
-        print(readed_log)
         bot.send_message(
             chat_id = message.chat.id,
-            parse_mode = "Markdown",
-            text = readed_log)
+            parse_mode='Markdown',
+            text = f'`{log_to_bot}`')
     except Exception as error:
         logger.error(error, exc_info = True)
+        bot.reply_to(message, text=error)
 
 ########################
 ####### Shedule ########
