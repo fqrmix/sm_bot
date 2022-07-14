@@ -1,7 +1,9 @@
 import os
 import json
+from dotenv import load_dotenv
 
 # Get env variables
+load_dotenv()
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GROUP_CHAT_ID_SM = int(os.environ.get('GROUP_CHAT_ID_SM'))
 GROUP_CHAT_ID_POISK = int(os.environ.get('GROUP_CHAT_ID_POISK'))

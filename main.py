@@ -19,7 +19,7 @@ logging.basicConfig(filename='telegram-bot.log', level=logging.INFO,
                     format=' %(asctime)s - %(levelname)s - %(message)s')
 
 # Telegram Bot init
-bot = telebot.TeleBot(config.TOKEN)
+bot = telebot.TeleBot(config.TELEGRAM_TOKEN)
 
 # Updating CSV file
 def update_actual_csv(nextpath, path):
