@@ -7,7 +7,6 @@ import logging
 import schedule
 import telebot
 import config
-import os
 
 # RU locale
 locale.setlocale(locale.LC_ALL, '')
@@ -304,10 +303,17 @@ def get_log(message):
     lines = 5 if value == '/log' else int(value) # 30 - default value, if value in message is empty
     log_to_bot = get_log_str(log_name='telegram-bot.log', lines=lines)
     try:
-        bot.send_message(
-            chat_id = message.chat.id,
-            parse_mode='Markdown',
-            text = f'`{log_to_bot}`')
+        if len(log_to_bot) > 4096:
+            for x in range(0, len(log_to_bot), 4096):
+                bot.send_message(
+                    chat_id = message.chat.id,
+                    parse_mode='Markdown',
+                    text = f'`{log_to_bot[x:x+4096]}`')
+        else:
+            bot.send_message(
+                chat_id = message.chat.id,
+                parse_mode='Markdown',
+                text = f'`{log_to_bot}`')
     except Exception as error:
         logger.error(error, exc_info = True)
         bot.reply_to(message, text=error)
