@@ -3,6 +3,7 @@ import csv
 import time
 import locale
 import datetime
+import calendar
 import logging
 import schedule
 import telebot
@@ -40,7 +41,7 @@ def update_actual_csv(nextpath, path):
 
 def create_employer_str(employer_list, current_day, current_month):
     '''
-        Function that create string which will be sent to Telegram API
+        Function that create string which will be sent to Telegram Chat
         _______
         Arguments:
             *employer_list == (list) of the employers from CSV file
@@ -83,11 +84,11 @@ def get_employer_name(val: str, parameter: str, my_dict: dict):
     '''
     for key, value in my_dict.items():
         if val == value[parameter]:
-            return key
-    return None
+            return key, value
+    return None, None
 
 # Get list of today employers
-def get_today_employers(path, shift="2/2"):
+def get_today_employers(path, current_day, shift="2/2"):
     '''
         Function that generate string of today employers.
         _______
@@ -103,7 +104,6 @@ def get_today_employers(path, shift="2/2"):
                 current_month = "5/2"
                 current_day = "Any"
             else:
-                current_day = str(datetime.date.today().day)
                 current_month = config.months[str(datetime.date.today().month)]
             text_message = create_employer_str(employer_list, current_day, current_month)
             return text_message
@@ -112,7 +112,7 @@ def get_today_employers(path, shift="2/2"):
         return None
 
 # Send message of today employers
-def send_today_employers(chat_id):
+def send_today_employers(chat_id, current_day, week_day):
     '''
         Function that send strings from get_today_employers() to Telegram Chat.
         _______
@@ -120,10 +120,9 @@ def send_today_employers(chat_id):
             *chat_id == Id of Telegram Chat
     '''
     try:
-        current_week_day = datetime.date.today().isoweekday()
-        if current_week_day in range(1,6):
-            today_2_2_employers = get_today_employers(config.CSV_PATH, shift="2/2")
-            today_5_2_employers = get_today_employers(config.CSV_PATH_5_2, shift="5/2")            
+        if week_day in range(1,6):
+            today_2_2_employers = get_today_employers(config.CSV_PATH, current_day, shift="2/2")
+            today_5_2_employers = get_today_employers(config.CSV_PATH_5_2, current_day, shift="5/2")            
             if today_2_2_employers is None or today_5_2_employers is None:
                 raise ValueError('String is empty!')
             text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'\
@@ -134,7 +133,7 @@ def send_today_employers(chat_id):
                 text = text_message)
             logger.info(f'[today-employers] Message has been successfully sent! \n\n {text_message}')
         else:
-            today_2_2_employers = get_today_employers(config.CSV_PATH, shift="2/2")
+            today_2_2_employers = get_today_employers(config.CSV_PATH, current_day, shift="2/2")
             if today_2_2_employers is None:
                 raise ValueError('String is empty!')
             else:
@@ -173,6 +172,7 @@ def get_log_str(log_name, lines):
             result += line
     return result
 
+
 ###########################
 ## Telegram Bot Handlers ##
 ###########################
@@ -192,7 +192,8 @@ def init_bot(message):
                 parse_mode = 'Markdown',
                 text = f'Init in chat group:\nID: {message.chat.id}\nChat name: {message.chat.title}'
             )
-        logger.info(f"[init] Initialization was completed in chatID - {message.chat.id}, chatName - {message.chat.title}, by user - @{message.from_user.username}")
+        logger.info(f"[init] Initialization was completed in chatID - {message.chat.id}, "\
+            f"chatName - {message.chat.title}, by user - @{message.from_user.username}")
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -213,7 +214,8 @@ def load_message(message):
         bot.send_message(
             chat_id = message.chat.id,
             text = "Данная команда предназначена только для сотрудников тех. сопровождения/подключения!")
-        error_msg = f"[load] User @{message.from_user.username} use command /load in chatID - {message.chat.id}, chatName - {message.chat.title}, but he doesn't exist in employers database!"
+        error_msg = f"[load] User @{message.from_user.username} use command /load in chatID "\
+            f"- {message.chat.id}, chatName - {message.chat.title}, but he doesn't exist in employers database!"
         raise ValueError(error_msg)
     else:
         logger.info(f'[load] User "{message.from_user.username}" trying to load a new CSV file')
@@ -231,7 +233,8 @@ def load_employers_csv(message):
             bot.send_message(message.chat.id, "Loading was canceled by user")
             logger.info(f"[load] Loading was canceled by user @{message.from_user.username}")
         else:
-            bot.send_message(message.chat.id, f"I am waiting for CSV file!\nNot for {message.content_type}!\nUse /cancel command to quit")
+            bot.send_message(message.chat.id, f"I am waiting for CSV file!\n"\
+                f"Not for {message.content_type}!\nUse /cancel command to quit")
             bot.register_next_step_handler(message, load_employers_csv)
     else:
         try:
@@ -245,15 +248,59 @@ def load_employers_csv(message):
             logger.error(error, exc_info = True)
 
 # Get list of today employers
-@bot.message_handler(commands=['today'])
-def today_employers(message):
+@bot.message_handler(commands=['workers'])
+def workers_list(message):
     '''
-        Telegram handler of command /today, which send list of today employers.
+        Telegram handler of command /workers, which send list of today workers.
         _______
         Arguments:
             *message == Object of message
     '''
-    send_today_employers(message.chat.id)
+    if len(message.text) == 8: # If message.text contains nothing but /workers command
+        current_day = str(datetime.date.today().day)
+        current_week_day = datetime.date.today().isoweekday()
+        send_today_employers(message.chat.id, current_day, current_week_day)
+    else:
+        sign = ''
+        numeric_value = ''
+        value = (message.text).replace('/workers ', '') # Value after /workers command
+
+        if value.startswith('+'):
+            sign = '+'
+            numeric_value = value.replace('+', '')
+        elif value.startswith('-'):
+            sign = '-'
+            numeric_value = value.replace('-', '')
+
+        if (not numeric_value.isdigit() and sign != '') or \
+            (not value.isdigit() and sign == ''):
+            err_msg = 'Only digits allowed to use after /workers command!\nUse:\n\n'\
+                '[/workers +1] - Get list of tommorow workers\n'\
+                '[/workers -1] - Get list of yesterday workers\n'\
+                '[/workers 23] - Get workers which works at 23 day of current month'
+            raise ValueError(err_msg)
+        if sign == '' and numeric_value == '':
+            past_day = value
+        else:
+            if sign == '+':
+                past_day = str(datetime.date.today().day + int(numeric_value))
+            elif sign == '-':
+                past_day = str(datetime.date.today().day - int(numeric_value))
+        
+        now = datetime.datetime.now()
+
+        past_week_day = datetime.date(
+            year=now.year,
+            month=now.month,
+            day=int(past_day)).isoweekday()
+
+        print(past_day)
+
+        if int(past_day) in range(1, calendar.monthrange(now.year, now.month)[1]):
+            send_today_employers(message.chat.id, past_day, past_week_day)
+        else:
+            raise ValueError('Bad value! Day cant be out of range 1-31')
+
 
 # Repeat lunch poll
 @bot.message_handler(commands=['lunch'])
@@ -270,7 +317,7 @@ def reapeat_lunch(message):
 @bot.message_handler(commands=['out'])
 def get_out(message):
     '''
-        Telegram handler of command /out, send notification about employers goes for lunch,
+        Telegram handler of command /out, which send notification about employers goes for lunch,
         _______
         Arguments:
             *message == Object of message
@@ -286,21 +333,30 @@ def get_out(message):
             bot.send_message(
                 chat_id = message.chat.id,
                 text = "Данная команда предназначена только для сотрудников тех. сопровождения/подключения!")
-            error_msg = f"[out] User @{message.from_user.username} use command /out in chatID - {message.chat.id}, chatName - {message.chat.title}, but he doesn't exist in employers database!"
+            error_msg = f"[out] User @{message.from_user.username} use command /out in chatID - {message.chat.id}, "\
+                f"chatName - {message.chat.title}, but he doesn't exist in employers database!"
             raise ValueError(error_msg)
         bot.send_message(
             chat_id = message.chat.id,
             parse_mode = "Markdown",
-            text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел на обед.\nКоллеги, подмените пожалуйста его в чатах.")
-        logger.info(f"[out] User @{message.from_user.username} successfully use command /out in chatID - {message.chat.id}, chatName - {message.chat.title}")
+            text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел на обед."\
+                f"\nКоллеги, подмените пожалуйста его в чатах.")
+        logger.info(f"[out] User @{message.from_user.username} successfully use command /out in "\
+            f"chatID - {message.chat.id}, chatName - {message.chat.title}")
     except Exception as error:
         logger.error(error, exc_info = True)
 
 # Get log into chat
 @bot.message_handler(commands=['log'])
 def get_log(message):
+    '''
+        Telegram handler of command /log, which send log file into chat.
+        _______
+        Arguments:
+            *message == Object of message
+    '''
     value = (message.text).replace('/log ', '') # Number after /log message
-    lines = 5 if value == '/log' else int(value) # 30 - default value, if value in message is empty
+    lines = 5 if value == '/log' else int(value) # 5 - default value, if value in message is empty
     log_to_bot = get_log_str(log_name='telegram-bot.log', lines=lines)
     try:
         if len(log_to_bot) > 4096:
@@ -317,6 +373,7 @@ def get_log(message):
     except Exception as error:
         logger.error(error, exc_info = True)
         bot.reply_to(message, text=error)
+
 
 ########################
 ####### Shedule ########
@@ -340,13 +397,31 @@ class ScheduleMessage():
 
 
 # Send today employers message to SM/POISK chat groups
-schedule.every().day.at("08:00").do(send_today_employers, chat_id = config.GROUP_CHAT_ID_SM)
-schedule.every().day.at("08:00").do(send_today_employers, chat_id = config.GROUP_CHAT_ID_POISK)
+TODAY_EMPOYERS_TIME = "08:00"
+current_day = str(datetime.date.today().day)
+current_week_day = datetime.date.today().isoweekday()
+
+schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
+    send_today_employers, 
+    chat_id=config.GROUP_CHAT_ID_SM,
+    current_day=current_day,
+    current_week_day=current_week_day)
+
+schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
+    send_today_employers, 
+    chat_id=config.GROUP_CHAT_ID_POISK,
+    current_day=current_day,
+    current_week_day=current_week_day)
 
 # Send today lunch-poll message to SM/POISK chat groups
-schedule.every().day.at("10:00").do(send_lunch_query, chat_id = config.GROUP_CHAT_ID_SM)
-schedule.every().day.at("10:00").do(send_lunch_query, chat_id = config.GROUP_CHAT_ID_POISK)
+TODAY_LUNCH_TIME = "10:00"
+schedule.every().day.at(TODAY_LUNCH_TIME).do(
+    send_lunch_query,
+     chat_id=config.GROUP_CHAT_ID_SM)
 
+schedule.every().day.at(TODAY_LUNCH_TIME).do(
+    send_lunch_query, 
+    chat_id=config.GROUP_CHAT_ID_POISK)
 
 ############################
 ## Start infinity polling ##
