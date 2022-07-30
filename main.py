@@ -65,7 +65,7 @@ def create_employer_str(employer_list, current_day, current_month):
                 f" | `{actual_employer_group}`" \
                 f" | Cмена: `{shift_start}` - `{shift_end}`\n"
 
-        logger.info(f"[today-employers] Employers string has been successfully generated!\n\n{text_message}")
+        logger.info(f"[today-employers] Employers string has been successfully generated!")
         return text_message
     except Exception as error:
         logger.error(error, exc_info = True)
@@ -131,7 +131,7 @@ def send_today_employers(chat_id, current_day, week_day):
                 chat_id = chat_id,
                 parse_mode = 'Markdown',
                 text = text_message)
-            logger.info(f'[today-employers] Message has been successfully sent! \n\n {text_message}')
+            logger.info(f'[today-employers] Message has been successfully sent!')
         else:
             today_2_2_employers = get_today_employers(config.CSV_PATH, current_day, shift="2/2")
             if today_2_2_employers is None:
@@ -142,7 +142,7 @@ def send_today_employers(chat_id, current_day, week_day):
                     chat_id = chat_id,
                     parse_mode = 'Markdown',
                     text = text_message)
-                logger.info(f'[today-employers] Message has been successfully sent! \n\n {text_message}')
+                logger.info(f'[today-employers] Message has been successfully sent!')
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -405,13 +405,13 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     send_today_employers, 
     chat_id=config.GROUP_CHAT_ID_SM,
     current_day=current_day,
-    current_week_day=current_week_day)
+    week_day=current_week_day)
 
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     send_today_employers, 
     chat_id=config.GROUP_CHAT_ID_POISK,
     current_day=current_day,
-    current_week_day=current_week_day)
+    week_day=current_week_day)
 
 # Send today lunch-poll message to SM/POISK chat groups
 TODAY_LUNCH_TIME = "10:00"

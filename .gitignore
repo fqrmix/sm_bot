@@ -1,4 +1,6 @@
 sm_bot_venv
+sm_bot_env
 __pycache__
 .pylintrc
 .env
+.DS_Store
