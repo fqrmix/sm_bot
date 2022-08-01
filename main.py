@@ -206,7 +206,7 @@ def load_message(message):
         Arguments:
             *message == Object of message
     '''
-    employer_name = get_employer_name(
+    employer_name, value = get_employer_name(
         val = message.from_user.username,
         parameter = "telegram",
         my_dict = config.employers_info)
@@ -256,50 +256,47 @@ def workers_list(message):
         Arguments:
             *message == Object of message
     '''
-    if len(message.text) == 8: # If message.text contains nothing but /workers command
-        current_day = str(datetime.date.today().day)
-        current_week_day = datetime.date.today().isoweekday()
-        send_today_employers(message.chat.id, current_day, current_week_day)
-    else:
-        sign = ''
-        numeric_value = ''
-        value = (message.text).replace('/workers ', '') # Value after /workers command
-
-        if value.startswith('+'):
-            sign = '+'
-            numeric_value = value.replace('+', '')
-        elif value.startswith('-'):
-            sign = '-'
-            numeric_value = value.replace('-', '')
-
-        if (not numeric_value.isdigit() and sign != '') or \
-            (not value.isdigit() and sign == ''):
-            err_msg = 'Only digits allowed to use after /workers command!\nUse:\n\n'\
-                '[/workers +1] - Get list of tommorow workers\n'\
-                '[/workers -1] - Get list of yesterday workers\n'\
-                '[/workers 23] - Get workers which works at 23 day of current month'
-            raise ValueError(err_msg)
-        if sign == '' and numeric_value == '':
-            past_day = value
+    try:
+        if len(message.text) == 8: # If message.text contains nothing but /workers command
+            current_day = str(datetime.date.today().day)
+            current_week_day = datetime.date.today().isoweekday()
+            send_today_employers(message.chat.id, current_day, current_week_day)
         else:
-            if sign == '+':
-                past_day = str(datetime.date.today().day + int(numeric_value))
-            elif sign == '-':
-                past_day = str(datetime.date.today().day - int(numeric_value))
-        
-        now = datetime.datetime.now()
+            sign = ''
+            numeric_value = ''
+            value = (message.text).replace('/workers ', '') # Value after /workers command
 
-        past_week_day = datetime.date(
-            year=now.year,
-            month=now.month,
-            day=int(past_day)).isoweekday()
+            if value.startswith('+'):
+                sign = '+'
+                numeric_value = value.replace('+', '')
+            elif value.startswith('-'):
+                sign = '-'
+                numeric_value = value.replace('-', '')
 
-        print(past_day)
+            if (not numeric_value.isdigit() and sign != '') or \
+                (not value.isdigit() and sign == ''):
+                err_msg = 'Only digits allowed to use after /workers command!\nUse:\n\n'\
+                    '[/workers +1] - Get list of tommorow workers\n'\
+                    '[/workers -1] - Get list of yesterday workers\n'\
+                    '[/workers 23] - Get workers which works at 23 day of current month'
+                raise ValueError(err_msg)
+            if sign == '' and numeric_value == '':
+                past_day = value
+            else:
+                if sign == '+':
+                    past_day = str(datetime.date.today().day + int(numeric_value))
+                elif sign == '-':
+                    past_day = str(datetime.date.today().day - int(numeric_value))
+            
+            now = datetime.datetime.now()
+            past_week_day = datetime.date(
+                year=now.year,
+                month=now.month,
+                day=int(past_day)).isoweekday()
 
-        if int(past_day) in range(1, calendar.monthrange(now.year, now.month)[1]):
             send_today_employers(message.chat.id, past_day, past_week_day)
-        else:
-            raise ValueError('Bad value! Day cant be out of range 1-31')
+    except Exception as error:
+        pass # Дописать
 
 
 # Repeat lunch poll
@@ -325,10 +322,11 @@ def get_out(message):
     try:
         employer_telegram_id = message.from_user.id
         print(employer_telegram_id)
-        employer_name = get_employer_name(
+        employer_name, value = get_employer_name(
             val = str(employer_telegram_id),
             parameter = 'telegram_id',
             my_dict = config.employers_info)
+        print(employer_name)
         if employer_name is None:
             bot.send_message(
                 chat_id = message.chat.id,
