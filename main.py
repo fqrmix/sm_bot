@@ -39,6 +39,32 @@ def update_actual_csv(nextpath, path):
     except Exception as error_msg:
         logger.error(error_msg, exc_info=True)
 
+def create_chatters_str(employer_list, current_day, current_month):
+    '''
+        Function that create string which will be sent to Telegram Chat
+        _______
+        Arguments:
+            *employer_list == (list) of the employers from CSV file
+            *current_day == Current day from datetime() module
+            *current_month == Current month with str() type
+    '''
+    text_message = ''
+    try:
+        for current_employer in employer_list:
+            if current_employer[current_day] != "" and current_employer[current_day] != "ОТ":
+                if len(current_employer[current_day]) > 0 and current_employer[current_day][1] == "ч":
+                    actual_employer_name = current_employer[current_month]
+                    actual_employer_info = config.employers_info[actual_employer_name]
+                    actual_employer_group = actual_employer_info['group']
+                    actual_employer_telegramid = actual_employer_info['telegram_id']
+                    text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
+                                    f" | `{actual_employer_group}`"
+        logger.info(f"[chatter-list] Chatters string has been successfully generated!")
+        return text_message
+    except Exception as error:
+        logger.error(error, exc_info = True)
+        return None
+
 def create_employer_str(employer_list, current_day, current_month):
     '''
         Function that create string which will be sent to Telegram Chat
@@ -58,8 +84,8 @@ def create_employer_str(employer_list, current_day, current_month):
                 actual_employer_group = actual_employer_info['group']
                 actual_employer_telegramid = actual_employer_info['telegram_id']
 
-                shift_start = config.working_shift[current_employer[current_day]]['start']
-                shift_end = config.working_shift[current_employer[current_day]]['end']
+                shift_start = config.working_shift[current_employer[current_day][0]]['start']
+                shift_end = config.working_shift[current_employer[current_day][0]]['end']
 
                 text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
                 f" | `{actual_employer_group}`" \
@@ -157,7 +183,7 @@ def send_lunch_query(chat_id):
     try:
         bot.send_poll(
             chat_id = chat_id,
-            question = 'Доброе утро, Шопмастерская!\nВо сколько обед?',
+            question = 'Доброе утро!\nВо сколько обед?',
             is_anonymous = False,
             options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'])
         logger.info(f'[lunch-poll] Lunch poll has been successfully sent in chatID: {chat_id}!')
@@ -337,7 +363,7 @@ def get_out(message):
         bot.send_message(
             chat_id = message.chat.id,
             parse_mode = "Markdown",
-            text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел на обед."\
+            text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел(-ла) на обед."\
                 f"\nКоллеги, подмените пожалуйста его в чатах.")
         logger.info(f"[out] User @{message.from_user.username} successfully use command /out in "\
             f"chatID - {message.chat.id}, chatName - {message.chat.title}")
