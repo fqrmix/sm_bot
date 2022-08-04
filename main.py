@@ -1,10 +1,8 @@
-from multiprocessing.context import Process
+import threading
 import csv
-from multiprocessing.sharedctypes import Value
 import time
 import locale
 import datetime
-import calendar
 import logging
 import schedule
 import telebot
@@ -25,6 +23,7 @@ logging.basicConfig(filename='telegram-bot.log', level=logging.INFO,
 
 # Telegram Bot init
 bot = telebot.TeleBot(config.TELEGRAM_TOKEN)
+chatter_list_ids = []
 
 #####################
 ## Basic functions ##
@@ -71,6 +70,10 @@ def get_log_str(log_name, lines):
         for line in (file.readlines()[-lines:]):
             result += line
     return result
+
+def get_lunch_time(option_id):
+    options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
+    return str(options[option_id])
 
 ###################
 ## Workers block ##
@@ -161,10 +164,14 @@ def send_today_workers(chat_id, current_day, week_day):
                 raise ValueError('Workers string is empty!')
             text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'\
                         f'\nПятидневщики:\n{today_5_2_employers}'
-            bot.send_message(
+            message = bot.send_message(
                 chat_id = chat_id,
                 parse_mode = 'Markdown',
                 text = text_message
+            )
+            bot.pin_chat_message(
+                    chat_id=chat_id,
+                    message_id=message.id
             )
             logger.info(f'[today-employers] Message has been successfully sent!')
         else:
@@ -177,11 +184,15 @@ def send_today_workers(chat_id, current_day, week_day):
             if today_2_2_employers is None:
                 raise ValueError('String is empty!')
             else:
-                text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'
+                message = text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'
                 bot.send_message(
                     chat_id = chat_id,
                     parse_mode = 'Markdown',
                     text = text_message
+                )
+                bot.pin_chat_message(
+                    chat_id=chat_id,
+                    message_id=message.id
                 )
                 logger.info(f'[today-employers] Message has been successfully sent!')
     except Exception as error:
@@ -201,6 +212,7 @@ def create_chatters_str(employer_list, current_day, current_month):
             *current_month == Current month with str() type
     '''
     text_message = ''
+    global chatter_list_ids
     try:
         for current_employer in employer_list:
             if current_employer[current_day] != "" and current_employer[current_day] != "ОТ":
@@ -211,6 +223,7 @@ def create_chatters_str(employer_list, current_day, current_month):
                     actual_employer_telegramid = actual_employer_info['telegram_id']
                     text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
                                     f" | `{actual_employer_group}`"
+                    chatter_list_ids.append(actual_employer_telegramid)
         logger.info(f"[chatter-list] Chatters string has been successfully generated!")
         return text_message
     except Exception as error:
@@ -249,11 +262,38 @@ def send_lunch_query(chat_id):
             chat_id = chat_id,
             question = 'Доброе утро!\nВо сколько обед?',
             is_anonymous = False,
-            options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'])
+            options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:27'])
         logger.info(f'[lunch-poll] Lunch poll has been successfully sent in chatID: {chat_id}!')
     except Exception as error:
         logger.error(error, exc_info = True)
 
+# Chatter list job
+def chatter_list_job(employer_telegram_id):
+    try:
+        chat_id = None
+        employer_name, employer_info = get_employer_name(
+            val=str(employer_telegram_id),
+            parameter='telegram_id', 
+            my_dict=config.employers_info
+        )
+        print(employer_info)
+        if employer_info['group'] == 'ShopMaster':
+            chat_id = config.GROUP_CHAT_ID_SM
+            pass
+        elif employer_info['group'] == 'Poisk':
+            chat_id = config.GROUP_CHAT_ID_POISK
+        if chat_id is not None:
+            bot.send_message(
+                chat_id = chat_id,
+                parse_mode = "Markdown",
+                text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел(-ла) на обед."\
+                    f"\nКоллеги, подмените пожалуйста его в чатах."
+            )
+            return schedule.CancelJob
+        else:
+            return schedule.CancelJob
+    except Exception as error:
+        logger.error(error, exc_info = True)
 
 ###########################
 ## Telegram Bot Handlers ##
@@ -281,7 +321,7 @@ def init_bot(message):
 
 # Loading .csv file
 @bot.message_handler(commands=['load'])
-def load_message(message):
+def handle_loader(message):
     '''
         Telegram handler of command /load, which loading CSV file for next month.
         _______
@@ -331,7 +371,7 @@ def load_employers_csv(message):
 
 # Get list of today employers
 @bot.message_handler(commands=['workers'])
-def workers_list(message):
+def handle_workers(message):
     '''
         Telegram handler of command /workers, which send list of today workers.
         _______
@@ -378,17 +418,17 @@ def workers_list(message):
 
             send_today_workers(message.chat.id, past_day, past_week_day)
     except Exception as error:
-        pass # Дописать
+        logger.error(error, exc_info = True)
 
 # Send chatter list
 @bot.message_handler(commands=['chatters'])
-def chatter_list(message):
+def handle_chatters(message):
     current_day = str(datetime.date.today().day)
     send_chatter_list(message.chat.id, current_day=current_day)
 
 # Repeat lunch poll
 @bot.message_handler(commands=['lunch'])
-def reapeat_lunch(message):
+def handle_lunch(message):
     '''
         Telegram handler of command /lunch, which loading CSV file for next month.
         _______
@@ -399,7 +439,7 @@ def reapeat_lunch(message):
 
 # Out for lunch
 @bot.message_handler(commands=['out'])
-def get_out(message):
+def handle_out(message):
     '''
         Telegram handler of command /out, which send notification about employers goes for lunch,
         _______
@@ -431,9 +471,24 @@ def get_out(message):
     except Exception as error:
         logger.error(error, exc_info = True)
 
+# Auto-out for lunch
+@bot.poll_answer_handler()
+def handle_poll_answer(pollAnswer):
+    global chatter_list_ids
+    try:
+        if str(pollAnswer.user.id) in chatter_list_ids:
+            lunch_time = get_lunch_time(pollAnswer.option_ids[0])
+            print(lunch_time)
+            schedule.every().day.at(lunch_time).do(
+                chatter_list_job,
+                employer_telegram_id = pollAnswer.user.id
+            )
+    except Exception as error:
+        logger.error(error, exc_info = True)
+
 # Get log into chat
 @bot.message_handler(commands=['log'])
-def get_log(message):
+def handle_log(message):
     '''
         Telegram handler of command /log, which send log file into chat.
         _______
@@ -461,43 +516,62 @@ def get_log(message):
 
 
 ########################
-####### Shedule ########
+####### Sсhedule #######
 ########################
 
-class ScheduleMessage():
-    """Class for running shedules as isolated process"""
+def run_continuously(interval=1):
+    """Continuously run, while executing pending jobs at each
+    elapsed time interval.
+    @return cease_continuous_run: threading. Event which can
+    be set to cease continuous run. Please note that it is
+    *intended behavior that run_continuously() does not run
+    missed jobs*. For example, if you've registered a job that
+    should run every minute and you set a continuous run
+    interval of one hour then your job won't be run 60 times
+    at each interval but only once.
+    """
+    cease_continuous_run = threading.Event()
 
-    @staticmethod
-    def try_send_schedule():
-        '''Trying to run_pending() method of shedule'''
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+    class ScheduleThread(threading.Thread):
+        @classmethod
+        def run(cls):
+            while not cease_continuous_run.is_set():
+                schedule.run_pending()
+                time.sleep(interval)
 
-    @staticmethod
-    def start_process():
-        '''Starting isolated process'''
-        shedule_process = Process(target=ScheduleMessage.try_send_schedule, args=())
-        shedule_process.start()
+    continuous_thread = ScheduleThread()
+    continuous_thread.start()
+    return cease_continuous_run
 
 
 # Send today employers message to SM/POISK chat groups
 TODAY_EMPOYERS_TIME = "08:00"
 current_day = str(datetime.date.today().day)
 current_week_day = datetime.date.today().isoweekday()
-
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     send_today_workers, 
     chat_id=config.GROUP_CHAT_ID_SM,
     current_day=current_day,
     week_day=current_week_day
 )
-
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     send_today_workers, 
     chat_id=config.GROUP_CHAT_ID_POISK,
     current_day=current_day,
     week_day=current_week_day
+)
+
+# Send chatters list message to SM/POISK chat groups
+TODAY_CHATTERS_TIME = "08:30"
+schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+    send_chatter_list, 
+    chat_id=config.GROUP_CHAT_ID_SM,
+    current_day=current_day,
+)
+schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+    send_chatter_list, 
+    chat_id=config.GROUP_CHAT_ID_POISK,
+    current_day=current_day,
 )
 
 # Send today lunch-poll message to SM/POISK chat groups
@@ -506,25 +580,11 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
     send_lunch_query,
     chat_id=config.GROUP_CHAT_ID_SM
 )
-
 schedule.every().day.at(TODAY_LUNCH_TIME).do(
     send_lunch_query, 
     chat_id=config.GROUP_CHAT_ID_POISK
 )
 
-# Send chatters list message to SM/POISK chat groups
-TODAY_CHATTERS_TIME = "08:35"
-schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-    send_chatter_list, 
-    chat_id=config.GROUP_CHAT_ID_SM,
-    current_day=current_day,
-)
-
-schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-    send_chatter_list, 
-    chat_id=config.GROUP_CHAT_ID_POISK,
-    current_day=current_day,
-)
 
 ############################
 ## Start infinity polling ##
@@ -537,9 +597,11 @@ if __name__ == '__main__':
         logger.info('[main] Time to new CSV...\nUpdating')
         update_actual_csv(config.NEXT_MONTH_CSV_PATH, config.CSV_PATH) # Update actual CSV file
         logger.info('[main] CSV file was successfully loaded! Strarting polling!')
-        ScheduleMessage.start_process()
+        stop_run_continuously = run_continuously()
         bot.infinity_polling()
+        stop_run_continuously.set()
     else:
         logger.info("[main] New CSV doesn't needed! Starting polling!")
-        ScheduleMessage.start_process()
+        stop_run_continuously = run_continuously()
         bot.infinity_polling()
+        stop_run_continuously.set()
