@@ -21,7 +21,14 @@ pyhton main.py
 ## Bot commands
 
 - > **/load** - Load a shedule for next month;
-- > **/today** - Get a today shift workers;
+- > **/workers** - Get a today shift workers;
+```
+Also it can be used that way:
+[/workers +1] - Get list of tommorow workers
+[/workers -1] - Get list of yesterday workers
+[/workers 23] - Get workers which works at 23 day of current month
+```
+- > **/chatters** - Get a chatter list for today;
 - > **/lunch** - Send a lunch-poll;
 - > **/out** - Go out for lunch.
 
