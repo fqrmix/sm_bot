@@ -224,8 +224,12 @@ def create_chatters_str(employer_list, current_day, current_month):
                     text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
                                     f" | `{actual_employer_group}`"
                     chatter_list_ids.append(actual_employer_telegramid)
-        logger.info(f"[chatter-list] Chatters string has been successfully generated!")
-        return text_message
+        if chatter_list_ids == [] or text_message == '':
+            err_msg = "[chatter-list] Chatters string wasn't generated (chatter_list_ids is empty)!"
+            raise ValueError(err_msg)
+        else:
+            logger.info(f"[chatter-list] Chatters string has been successfully generated!")
+            return text_message
     except Exception as error:
         logger.error(error, exc_info = True)
         return None
@@ -563,27 +567,28 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 
 # Send chatters list message to SM/POISK chat groups
 TODAY_CHATTERS_TIME = "08:30"
-schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-    send_chatter_list, 
-    chat_id=config.GROUP_CHAT_ID_SM,
-    current_day=current_day,
-)
-schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-    send_chatter_list, 
-    chat_id=config.GROUP_CHAT_ID_POISK,
-    current_day=current_day,
-)
+if chatter_list_ids != []:
+    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+        send_chatter_list, 
+        chat_id=config.GROUP_CHAT_ID_SM,
+        current_day=current_day,
+    )
+    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+        send_chatter_list, 
+        chat_id=config.GROUP_CHAT_ID_POISK,
+        current_day=current_day,
+    )
 
-# Send today lunch-poll message to SM/POISK chat groups
-TODAY_LUNCH_TIME = "10:00"
-schedule.every().day.at(TODAY_LUNCH_TIME).do(
-    send_lunch_query,
-    chat_id=config.GROUP_CHAT_ID_SM
-)
-schedule.every().day.at(TODAY_LUNCH_TIME).do(
-    send_lunch_query, 
-    chat_id=config.GROUP_CHAT_ID_POISK
-)
+    # Send today lunch-poll message to SM/POISK chat groups
+    TODAY_LUNCH_TIME = "10:00"
+    schedule.every().day.at(TODAY_LUNCH_TIME).do(
+        send_lunch_query,
+        chat_id=config.GROUP_CHAT_ID_SM
+    )
+    schedule.every().day.at(TODAY_LUNCH_TIME).do(
+        send_lunch_query, 
+        chat_id=config.GROUP_CHAT_ID_POISK
+    )
 
 
 ############################
