@@ -266,7 +266,7 @@ def send_lunch_query(chat_id):
             chat_id = chat_id,
             question = 'Доброе утро!\nВо сколько обед?',
             is_anonymous = False,
-            options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:27'])
+            options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'])
         logger.info(f'[lunch-poll] Lunch poll has been successfully sent in chatID: {chat_id}!')
     except Exception as error:
         logger.error(error, exc_info = True)
@@ -383,14 +383,17 @@ def handle_workers(message):
             *message == Object of message
     '''
     try:
-        if len(message.text) == 8: # If message.text contains nothing but /workers command
+        if len(message.text) == 8 or len(message.text) == 22: # If message.text contains nothing but /workers or /workers@fqrmix_sm_bot command
             current_day = str(datetime.date.today().day)
             current_week_day = datetime.date.today().isoweekday()
             send_today_workers(message.chat.id, current_day, current_week_day)
         else:
             sign = ''
             numeric_value = ''
-            value = (message.text).replace('/workers ', '') # Value after /workers command
+            if message.text == '/workers@fqrmix_sm_bot':
+                value = (message.text).replace('/workers@fqrmix_sm_bot ', '') # Value after /workers command
+            else:
+                value = (message.text).replace('/workers ', '') # Value after /workers command
 
             if value.startswith('+'):
                 sign = '+'
