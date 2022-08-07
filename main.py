@@ -390,7 +390,8 @@ def handle_workers(message):
         else:
             sign = ''
             numeric_value = ''
-            if message.text == '/workers@fqrmix_sm_bot':
+            print(message.text)
+            if len(message.text) > 8:
                 value = (message.text).replace('/workers@fqrmix_sm_bot ', '') # Value after /workers command
             else:
                 value = (message.text).replace('/workers ', '') # Value after /workers command
