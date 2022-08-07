@@ -164,14 +164,14 @@ def send_today_workers(chat_id, current_day, week_day):
                 raise ValueError('Workers string is empty!')
             text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'\
                         f'\nПятидневщики:\n{today_5_2_employers}'
-            message = bot.send_message(
+            bot_message = bot.send_message(
                 chat_id = chat_id,
                 parse_mode = 'Markdown',
                 text = text_message
             )
             bot.pin_chat_message(
                     chat_id=chat_id,
-                    message_id=message.id
+                    message_id=bot_message.id
             )
             logger.info(f'[today-employers] Message has been successfully sent!')
         else:
@@ -185,14 +185,14 @@ def send_today_workers(chat_id, current_day, week_day):
                 raise ValueError('String is empty!')
             else:
                 message = text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'
-                bot.send_message(
+                bot_message = bot.send_message(
                     chat_id = chat_id,
                     parse_mode = 'Markdown',
                     text = text_message
                 )
                 bot.pin_chat_message(
                     chat_id=chat_id,
-                    message_id=message.id
+                    message_id=bot_message.id
                 )
                 logger.info(f'[today-employers] Message has been successfully sent!')
     except Exception as error:
@@ -452,7 +452,6 @@ def handle_out(message):
     '''
     try:
         employer_telegram_id = message.from_user.id
-        print(employer_telegram_id)
         employer_name, value = get_employer_name(
             val = str(employer_telegram_id),
             parameter = 'telegram_id',
