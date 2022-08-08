@@ -222,7 +222,7 @@ def create_chatters_str(employer_list, current_day, current_month):
                     actual_employer_group = actual_employer_info['group']
                     actual_employer_telegramid = actual_employer_info['telegram_id']
                     text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
-                                    f" | `{actual_employer_group}`"
+                                    f" | `{actual_employer_group}`\n"
                     chatter_list_ids.append(actual_employer_telegramid)
         if chatter_list_ids == [] or text_message == '':
             err_msg = "[chatter-list] Chatters string wasn't generated (chatter_list_ids is empty)!"
@@ -391,7 +391,7 @@ def handle_workers(message):
             sign = ''
             numeric_value = ''
             print(message.text)
-            if len(message.text) > 8:
+            if len(message.text) > 22:
                 value = (message.text).replace('/workers@fqrmix_sm_bot ', '') # Value after /workers command
             else:
                 value = (message.text).replace('/workers ', '') # Value after /workers command
@@ -550,11 +550,11 @@ def run_continuously(interval=1):
     continuous_thread.start()
     return cease_continuous_run
 
+current_day = str(datetime.date.today().day)
+current_week_day = datetime.date.today().isoweekday()
 
 # Send today employers message to SM/POISK chat groups
 TODAY_EMPOYERS_TIME = "08:00"
-current_day = str(datetime.date.today().day)
-current_week_day = datetime.date.today().isoweekday()
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     send_today_workers, 
     chat_id=config.GROUP_CHAT_ID_SM,
@@ -569,8 +569,8 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 )
 
 # Send chatters list message to SM/POISK chat groups
-TODAY_CHATTERS_TIME = "08:30"
-if chatter_list_ids != []:
+TODAY_CHATTERS_TIME = "09:10"
+if current_week_day in range(1,6):
     schedule.every().day.at(TODAY_CHATTERS_TIME).do(
         send_chatter_list, 
         chat_id=config.GROUP_CHAT_ID_SM,
@@ -582,16 +582,16 @@ if chatter_list_ids != []:
         current_day=current_day,
     )
 
-    # Send today lunch-poll message to SM/POISK chat groups
-    TODAY_LUNCH_TIME = "10:00"
-    schedule.every().day.at(TODAY_LUNCH_TIME).do(
-        send_lunch_query,
-        chat_id=config.GROUP_CHAT_ID_SM
-    )
-    schedule.every().day.at(TODAY_LUNCH_TIME).do(
-        send_lunch_query, 
-        chat_id=config.GROUP_CHAT_ID_POISK
-    )
+# Send today lunch-poll message to SM/POISK chat groups
+TODAY_LUNCH_TIME = "10:00"
+schedule.every().day.at(TODAY_LUNCH_TIME).do(
+    send_lunch_query,
+    chat_id=config.GROUP_CHAT_ID_SM
+)
+schedule.every().day.at(TODAY_LUNCH_TIME).do(
+    send_lunch_query, 
+    chat_id=config.GROUP_CHAT_ID_POISK
+)
 
 
 ############################
