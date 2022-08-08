@@ -75,11 +75,33 @@ def get_lunch_time(option_id):
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
     return str(options[option_id])
 
+def sort_by_shift(employee): 
+    return employee['shift_start']
+
 ###################
 ## Workers block ##
 ###################
 
-def create_workers_str(employer_list, current_day, current_month):
+def create_actual_employee(current_employer, current_month, current_day):
+    actual_employer_name = current_employer[current_month]
+    actual_employer_info = config.employers_info[actual_employer_name]
+    actual_employer_group = actual_employer_info['group']
+    actual_employer_telegramid = actual_employer_info['telegram_id']
+
+    shift_start = config.working_shift[current_employer[current_day][0]]['start']
+    shift_end = config.working_shift[current_employer[current_day][0]]['end']
+
+    actual_employer = {
+        'name': actual_employer_name,
+        'info': actual_employer_info,
+        'group': actual_employer_group,
+        'telegram_id': actual_employer_telegramid,
+        'shift_start': shift_start,
+        'shift_end': shift_end
+    }
+    return actual_employer
+
+def create_workers_str(current_day, current_month, week_day):
     '''
         Function that create string which will be sent to Telegram Chat
         _______
@@ -88,58 +110,72 @@ def create_workers_str(employer_list, current_day, current_month):
             *current_day == Current day from datetime() module
             *current_month == Current month with str() type
     '''
-    text_message = ''
+    shopmasters_list = []
+    poisk_list = []
+    others_list = []
     try:
+        with open(config.CSV_PATH, encoding = 'utf-8-sig') as csvfile:
+            csv_reader = csv.DictReader(csvfile, delimiter=';')
+            employer_list = list(csv_reader)
         for current_employer in employer_list:
             if current_employer[current_day] != '' and current_employer[current_day] != 'ОТ':
-                # If current employer works today and don't at vacation
-                actual_employer_name = current_employer[current_month]
-                actual_employer_info = config.employers_info[actual_employer_name]
-                actual_employer_group = actual_employer_info['group']
-                actual_employer_telegramid = actual_employer_info['telegram_id']
 
-                shift_start = config.working_shift[current_employer[current_day][0]]['start']
-                shift_end = config.working_shift[current_employer[current_day][0]]['end']
-
-                text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
-                f" | `{actual_employer_group}`" \
-                f" | Cмена: `{shift_start}` - `{shift_end}`\n"
-
-        logger.info(f"[today-employers] Employers string has been successfully generated!")
-        return text_message
+                actual_employee = create_actual_employee(current_employer, current_month, current_day)
+                if actual_employee['group'] == 'ShopMaster':
+                    shopmasters_list.append(actual_employee)
+                elif actual_employee['group'] == 'Poisk':
+                    poisk_list.append(actual_employee)
+                else:
+                    others_list.append(actual_employee)
+            
+        if week_day in range(1,6):
+            with open(config.CSV_PATH_5_2, encoding = 'utf-8-sig') as csvfile:
+                csv_reader = csv.DictReader(csvfile, delimiter=';')
+                employer_list = list(csv_reader)
+                current_day = 'Any'
+                current_month = '5/2'
+            for current_employer in employer_list:
+                if current_employer[current_day] != '' and current_employer[current_day] != 'ОТ':
+                    actual_employee = create_actual_employee(current_employer, current_month, current_day)
+                    if actual_employee['group'] == 'ShopMaster':
+                        shopmasters_list.append(actual_employee)
+                    elif actual_employee['group'] == 'Poisk':
+                        poisk_list.append(actual_employee)
+                    else:
+                        others_list.append(actual_employee)
+        shopmasters_list.sort(key=sort_by_shift)
+        poisk_list.sort(key=sort_by_shift)
+        others_list.sort(key=sort_by_shift)
+        return shopmasters_list, poisk_list, others_list
     except Exception as error:
         logger.error(error, exc_info = True)
         return None
 
 # Get list of today employers
-def get_today_workers(path, current_day, shift="2/2", chat=False):
+def get_today_workers(group_list):
     '''
         Function that generate string of today employers.
         _______
         Arguments:
-            *path == Path to actual CSV file
-            *shift == Working shift (can be used as "2/2" or "5/2")
+            *group_list == List of employees group (shopmasters_list / poisk_list / others_list)
     '''
+    text_message = ''
     try:
-        with open(path, encoding = 'utf-8-sig') as csvfile:
-            csv_reader = csv.DictReader(csvfile, delimiter=';')
-            employer_list = list(csv_reader)
-            if shift == "5/2":
-                current_month = "5/2"
-                current_day = "Any"
+        for employee in group_list:
+            if employee['group'] == 'CMS' or employee['group'] == 'LK':
+                text_message += f"[{employee['name']}](tg://user?id={employee['telegram_id']})"\
+                f" | `{employee['group']}`" \
+                f" | Cмена: `{employee['shift_start']}` - `{employee['shift_end']}`\n"
             else:
-                current_month = config.months[str(datetime.date.today().month)]
-            if not chat:
-                text_message = create_workers_str(employer_list, current_day, current_month)
-            else:
-                text_message = create_chatters_str(employer_list, current_day, current_month)
-            return text_message
+                text_message += f"[{employee['name']}](tg://user?id={employee['telegram_id']})"\
+                f" | Cмена: `{employee['shift_start']}` - `{employee['shift_end']}`\n"
+        return text_message
     except Exception as error:
         logger.error(error, exc_info = True)
         return None
 
 # Send message of today employers
-def send_today_workers(chat_id, current_day, week_day):
+def send_today_workers(chat_id, current_day, week_day, current_day_text='Сегодня работают:'):
     '''
         Function that send strings from get_today_workers() to Telegram Chat.
         _______
@@ -147,54 +183,30 @@ def send_today_workers(chat_id, current_day, week_day):
             *chat_id == Id of Telegram Chat
     '''
     try:
+        current_month = config.months[str(datetime.date.today().month)]
+
+        shopmasters_list, poisk_list, others_list = create_workers_str(current_day, current_month, week_day)
+        today_shopmasters = get_today_workers(shopmasters_list)
+        today_poisk = get_today_workers(poisk_list)
+        today_others = get_today_workers(others_list)
+        if today_shopmasters is None or today_poisk is None or today_others is None:
+            raise ValueError('Workers string is empty!')
         if week_day in range(1,6):
-            today_2_2_employers = get_today_workers(
-                path=config.CSV_PATH,
-                current_day=current_day,
-                shift="2/2",
-                chat=False
-            )
-            today_5_2_employers = get_today_workers(
-                path=config.CSV_PATH_5_2, 
-                current_day=current_day, 
-                shift="5/2", 
-                chat=False
-            )
-            if today_2_2_employers is None or today_5_2_employers is None:
-                raise ValueError('Workers string is empty!')
-            text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'\
-                        f'\nПятидневщики:\n{today_5_2_employers}'
-            bot_message = bot.send_message(
-                chat_id = chat_id,
-                parse_mode = 'Markdown',
-                text = text_message
-            )
-            bot.pin_chat_message(
-                    chat_id=chat_id,
-                    message_id=bot_message.id
-            )
-            logger.info(f'[today-employers] Message has been successfully sent!')
+            text_message = f'*{current_day_text}*\n\n*Шопмастера:*\n{today_shopmasters}'\
+                        f'\n*Поиск:*\n{today_poisk}\n*CMS/LK:*\n{today_others}'
         else:
-            today_2_2_employers = get_today_workers(
-                path=config.CSV_PATH, 
-                current_day=current_day, 
-                shift="2/2", 
-                chat=False
-            )
-            if today_2_2_employers is None:
-                raise ValueError('String is empty!')
-            else:
-                message = text_message = f'Сегодня работают:\n\nСменщики:\n{today_2_2_employers}'
-                bot_message = bot.send_message(
-                    chat_id = chat_id,
-                    parse_mode = 'Markdown',
-                    text = text_message
-                )
-                bot.pin_chat_message(
-                    chat_id=chat_id,
-                    message_id=bot_message.id
-                )
-                logger.info(f'[today-employers] Message has been successfully sent!')
+            text_message = f'*{current_day_text}*\n\n*Шопмастера:*\n{today_shopmasters}'\
+                        f'\n*Поиск:*\n{today_poisk}'
+        bot_message = bot.send_message(
+            chat_id = chat_id,
+            parse_mode = 'Markdown',
+            text = text_message
+        )
+        bot.pin_chat_message(
+                chat_id=chat_id,
+                message_id=bot_message.id
+        )
+        logger.info(f'[today-employers] Message has been successfully sent!')
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -234,14 +246,17 @@ def create_chatters_str(employer_list, current_day, current_month):
         logger.error(error, exc_info = True)
         return None
 
+def get_today_chatters(current_day):
+        with open(config.CSV_PATH, encoding = 'utf-8-sig') as csvfile:
+            csv_reader = csv.DictReader(csvfile, delimiter=';')
+            employer_list = list(csv_reader)
+        current_month = config.months[str(datetime.date.today().month)]
+        text_message = create_chatters_str(employer_list, current_day, current_month)
+        return text_message
+
 def send_chatter_list(chat_id, current_day):
     try:
-        today_chatters = get_today_workers(
-            path=config.CSV_PATH,
-            current_day=current_day,
-            shift="2/2",
-            chat=True
-        )
+        today_chatters = get_today_chatters(current_day)
         if today_chatters is None:
             raise ValueError('Chatter string is empty!')
         text_message = f"Сегодня в чатах:\n{today_chatters}"
@@ -252,6 +267,10 @@ def send_chatter_list(chat_id, current_day):
         )
     except Exception as error:
         logger.error(error, exc_info = True)
+
+########################
+##  Lunch poll block  ##
+########################
 
 # Send lunch poll
 def send_lunch_query(chat_id):
@@ -385,12 +404,11 @@ def handle_workers(message):
     try:
         if len(message.text) == 8 or len(message.text) == 22: # If message.text contains nothing but /workers or /workers@fqrmix_sm_bot command
             current_day = str(datetime.date.today().day)
-            current_week_day = datetime.date.today().isoweekday()
-            send_today_workers(message.chat.id, current_day, current_week_day)
+            week_day = datetime.date.today().isoweekday()
+            send_today_workers(message.chat.id, current_day, week_day)
         else:
             sign = ''
             numeric_value = ''
-            print(message.text)
             if len(message.text) > 22:
                 value = (message.text).replace('/workers@fqrmix_sm_bot ', '') # Value after /workers command
             else:
@@ -424,7 +442,7 @@ def handle_workers(message):
                 month=now.month,
                 day=int(past_day)).isoweekday()
 
-            send_today_workers(message.chat.id, past_day, past_week_day)
+            send_today_workers(message.chat.id, past_day, week_day=past_week_day)
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -569,7 +587,7 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 )
 
 # Send chatters list message to SM/POISK chat groups
-TODAY_CHATTERS_TIME = "09:10"
+TODAY_CHATTERS_TIME = "08:30"
 if current_week_day in range(1,6):
     schedule.every().day.at(TODAY_CHATTERS_TIME).do(
         send_chatter_list, 
