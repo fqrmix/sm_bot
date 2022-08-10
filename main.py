@@ -71,9 +71,18 @@ def get_log_str(log_name, lines):
             result += line
     return result
 
+
+def get_notification_time(str):
+    new_str = str.split(':')
+    time_hour = int(new_str[0]) - 1
+    time_minutes = int(new_str[1]) + 55
+    return f'{time_hour}:{time_minutes}'
+
+
 def get_lunch_time(option_id):
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
-    return str(options[option_id])
+    lunch_time = options[option_id]
+    return get_notification_time(lunch_time)
 
 def sort_by_shift(employee): 
     return employee['shift_start']
@@ -309,7 +318,7 @@ def chatter_list_job(employer_telegram_id):
             bot.send_message(
                 chat_id = chat_id,
                 parse_mode = "Markdown",
-                text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел(-ла) на обед."\
+                text = f"[{employer_name}](tg://user?id={employer_telegram_id}) скоро уйдет на обед."\
                     f"\nКоллеги, подмените пожалуйста его в чатах."
             )
             return schedule.CancelJob
@@ -317,6 +326,119 @@ def chatter_list_job(employer_telegram_id):
             return schedule.CancelJob
     except Exception as error:
         logger.error(error, exc_info = True)
+
+########################
+##### Subscription #####
+########################
+
+def build_keyboard(keyboard_type):
+    if keyboard_type == 'main_sub':
+        keyboard = telebot.types.InlineKeyboardMarkup(row_width = 1)
+        main_menu_button_list = [
+            telebot.types.InlineKeyboardButton(text = 'Изменить время уведомления', callback_data = 'change_time'),
+            telebot.types.InlineKeyboardButton(text = 'Изменить параметры подписки', callback_data = 'change_sub'),
+        ]
+        keyboard.add(*main_menu_button_list)
+        return keyboard
+    
+    elif keyboard_type == 'change_sub_actions':
+        keyboard = telebot.types.InlineKeyboardMarkup(row_width = 1)
+        main_menu_button_list = [
+            telebot.types.InlineKeyboardButton(text = 'Включить подписку', callback_data = 'enable_sub'),
+            telebot.types.InlineKeyboardButton(text = 'Отключить подписку', callback_data = 'disable_sub'),
+            telebot.types.InlineKeyboardButton(text = '<< Назад', callback_data = 'back_to_main')
+        ]
+        keyboard.add(*main_menu_button_list)
+        return keyboard
+
+class Subscription:
+    @classmethod
+    def __init__(self):
+        current_employee_sub = {}
+        self.active_sub_list = []
+        self.employees_info = config.employers_info
+        for employee in self.employees_info:
+            current_employee = self.employees_info[employee]
+            if current_employee['subscription']['enabled'] == True:
+                current_employee_sub['name'] = employee
+                current_employee_sub['telegram_id'] = current_employee['telegram_id']
+                current_employee_sub['time_to_notify'] = current_employee['subscription']['time_to_notify']
+                self.active_sub_list.append(current_employee_sub)
+                current_employee_sub = {}
+        print(self.get_active_subs())
+
+    @classmethod
+    def get_active_subs(self):
+        return self.active_sub_list
+
+    @classmethod
+    def get_sub_info(self, telegram_id):
+        name, info = get_employer_name(
+            val=str(telegram_id),
+            parameter='telegram_id',
+            my_dict=self.employees_info
+        )
+        for employee in self.employees_info:
+            current_employee = self.employees_info[employee]
+            if employee == name:
+                return current_employee['subscription']
+
+    @classmethod
+    def disable(self, telegram_id):
+        name, info = get_employer_name(
+            val=str(telegram_id),
+            parameter='telegram_id',
+            my_dict=self.employees_info
+        )
+        self.employees_info[name]['subscription']['enabled'] = False
+        with open(config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
+            config.json.dump(self.employees_info, info_json, indent=4, ensure_ascii=False)
+        return self.employees_info[name]['subscription']
+
+    @classmethod
+    def enable(self, telegram_id):
+        name, info = get_employer_name(
+            val=str(telegram_id),
+            parameter='telegram_id',
+            my_dict=self.employees_info
+        )
+        self.employees_info[name]['subscription']['enabled'] = True
+        with open(config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
+            config.json.dump(self.employees_info, info_json, indent=4, ensure_ascii=False)
+        return self.employees_info[name]['subscription']
+
+    @classmethod
+    def change_sub_time(self, telegram_id):
+        pass
+    
+    @classmethod
+    def __sending_job__(self, actual_employee):
+        bot.send_message(
+                chat_id = actual_employee['telegram_id'],
+                parse_mode = "Markdown",
+                text = f"Привет!\nТы завтра работаешь с {actual_employee['shift_start']} до {actual_employee['shift_end']}"
+            )
+        return schedule.CancelJob
+
+    @classmethod
+    def create_schedule(self):
+        with open(config.CSV_PATH, encoding = 'utf-8-sig') as csvfile:
+            csv_reader = csv.DictReader(csvfile, delimiter=';')
+            employer_list = list(csv_reader)
+        day = str(datetime.date.today().day + 1)
+        current_month = config.months[str(datetime.date.today().month)]
+        for current_employee_sub in self.active_sub_list:
+            for current_employee in employer_list:
+                if current_employee[current_month] == current_employee_sub['name']:
+                    if current_employee[day] != "" and current_employee[day] != "ОТ":
+                        actual_employee = create_actual_employee(current_employee, current_month, day)
+                        schedule.every().day.at(current_employee_sub['time_to_notify']).do(
+                            self.__sending_job__,
+                            actual_employee=actual_employee
+                        )
+                        print(f"Schedule for {current_employee_sub['name']} was created, time: {current_employee_sub['time_to_notify']}")
+
+Subscription().create_schedule()
 
 ###########################
 ## Telegram Bot Handlers ##
@@ -341,6 +463,78 @@ def init_bot(message):
             f"chatName - {message.chat.title}, by user - @{message.from_user.username}")
     except Exception as error:
         logger.error(error, exc_info = True)
+
+# Subscription menu
+@bot.message_handler(commands=['subscription', 'sub'])
+def sub_menu(message):
+    telegram_id = message.from_user.id
+    sub_info = Subscription.get_sub_info(telegram_id)
+    sub_status = 'Включена' if sub_info['enabled'] else 'Отключена'
+    sub_notify_time = sub_info['time_to_notify']
+    text_message = f"Статус подписки: {sub_status}\nВремя для уведомлений: {sub_notify_time}" if sub_info['enabled'] else \
+                    f"Статус подписки: {sub_status}"
+    bot.send_message(
+        message.chat.id, 
+        text = text_message, 
+        reply_markup = build_keyboard('main_sub')
+    )
+
+# Subscription menu callback handler
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    if call.data == "youtube":
+        pass
+
+    elif call.data == 'change_sub':
+        bot.edit_message_text(
+            chat_id = call.message.chat.id,
+            message_id = call.message.message_id,
+            text = 'Выбери действие [Включить/Отключить]', 
+            reply_markup = build_keyboard('change_sub_actions'))
+    
+    elif call.data == 'enable_sub':
+        telegram_id = call.from_user.id
+        sub_info = Subscription.get_sub_info(telegram_id)
+        if sub_info['enabled']:
+            bot.send_message(
+                chat_id=call.message.chat.id,
+                text='Подписка уже активна!'
+            )
+        else:
+            Subscription.enable(telegram_id)
+            bot.send_message(
+                chat_id=call.message.chat.id,
+                text='Подписка была успешно включена!'
+            )
+
+    elif call.data == 'disable_sub':
+        telegram_id = call.from_user.id
+        sub_info = Subscription.get_sub_info(telegram_id)
+        if not sub_info['enabled']:
+            bot.send_message(
+                chat_id=call.message.chat.id,
+                text='Подписка уже отключена!'
+            )
+        else:
+            Subscription.disable(telegram_id)
+            bot.send_message(
+                chat_id=call.message.chat.id,
+                text='Подписка была успешно отключена!'
+            )
+
+    elif call.data == 'back_to_main':
+        telegram_id = call.from_user.id
+        sub_info = Subscription.get_sub_info(telegram_id)
+        sub_status = 'Включена' if sub_info['enabled'] else 'Отключена'
+        sub_notify_time = sub_info['time_to_notify']
+        text_message = f"Статус подписки: {sub_status}\nВремя для уведомлений: {sub_notify_time}" if sub_info['enabled'] else \
+                        f"Статус подписки: {sub_status}"
+        bot.edit_message_text(
+            chat_id = call.message.chat.id,
+            message_id = call.message.message_id,
+            text = text_message, 
+            reply_markup = build_keyboard('main_sub')
+        )
 
 # Loading .csv file
 @bot.message_handler(commands=['load'])
@@ -538,7 +732,6 @@ def handle_log(message):
     except Exception as error:
         logger.error(error, exc_info = True)
         bot.reply_to(message, text=error)
-
 
 ########################
 ####### Sсhedule #######
