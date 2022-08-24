@@ -1,4 +1,3 @@
-from sys import exc_info
 import threading
 import csv
 import time
@@ -226,11 +225,12 @@ def send_today_workers(chat_id, current_day, week_day, current_day_text='Сег�
             parse_mode = 'Markdown',
             text = text_message
         )
-        bot.pin_chat_message(
-                chat_id=chat_id,
-                message_id=bot_message.id
-        )
-        logger.info(f'[today-employers] Message has been successfully sent!')
+        if current_day_text == 'Сегодня работают:':
+            bot.pin_chat_message(
+                    chat_id=chat_id,
+                    message_id=bot_message.id
+            )
+        logger.info(f'[today-employers] Message has been successfully sent into chatID {chat_id}!')
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -269,7 +269,7 @@ def create_chatters_str(employer_list, current_day, current_month):
             err_msg = "[chatter-list] Chatters string wasn't generated (chatter_list is empty)!"
             raise ValueError(err_msg)
         else:
-            print(chatter_list)
+            logger.info(f"[chatter-list] Chatter scope:[{chatter_list}]")
             logger.info(f"[chatter-list] Chatters string has been successfully generated!")
             return text_message
     except Exception as error:
@@ -295,6 +295,7 @@ def send_chatter_list(chat_id, current_day):
             parse_mode='Markdown',
             text=text_message
         )
+        logger.info(f"[chatter-list] Chatter string was successfully sent into chatID: {chat_id}")
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -316,7 +317,7 @@ def send_lunch_query(chat_id):
             question = 'Доброе утро!\nВо сколько обед?',
             is_anonymous = False,
             options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'])
-        logger.info(f'[lunch-poll] Lunch poll has been successfully sent in chatID: {chat_id}!')
+        logger.info(f'[lunch-poll] Lunch poll has been successfully sent into chatID: {chat_id}!')
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -533,7 +534,7 @@ class Subscription:
                             )
                             logger.info(
                                 msg=f"[Sub] Schedule for {current_employee_sub['name']} was created," \
-                                    f"time: {current_employee_sub['time_to_notify']}")
+                                    f" time: {current_employee_sub['time_to_notify']}")
         except Exception as error:
             logger.error(error, exc_info = True)
 
@@ -553,15 +554,20 @@ class Client:
             password=password
         )
         self.current_principle = self.current_client.principal()
+        logger.info(f"[WebDAV] Connected by login: {login}")
         try:
             self.work_calendar = self.current_principle.calendar(name="Work")
             assert self.work_calendar
             self.work_calendar_url = self.work_calendar.url
             assert self.work_calendar_url
+            logger.info(f"[WebDAV] Found Work calendar for login: {login}")
         except caldav.error.NotFoundError:
+            logger.info(f"[WebDAV] Work calendar wasn't found for login: {login}. Creating calendar...")
             self.work_calendar = self.current_principle.make_calendar(name="Work")
             self.work_calendar_url = self.work_calendar.url
-            assert self.work_calendar_url     
+            assert self.work_calendar_url
+            logger.info(f"[WebDAV] Work calendar was successfuly created for login: {login}")
+            
 
     
 
@@ -581,8 +587,8 @@ class Client:
     def create_event(self, date_start, date_end, summary, month, time_start, time_end):
         try:
             event = self.work_calendar.save_event(
-                dtstart=datetime(2022, month, date_start, time_start),
-                dtend=datetime(2022, month, date_end, time_end),
+                dtstart=datetime.datetime(2022, month, date_start, time_start),
+                dtend=datetime.datetime(2022, month, date_end, time_end),
                 summary=summary
             )
         except Exception as error:
@@ -605,8 +611,6 @@ class Client:
                 print('Calendar is empty!')
         except Exception as error:
             logger.error(error, exc_info=True)
-        
-
 
 
 class WebDAV:
@@ -669,7 +673,7 @@ class WebDAV:
                             time_end=int_shift_end,
                             summary='Смена'
                         )
-                        logger.info(f'[{current_employee_name}] Created event for {item} of {config.months[str(month)]}')
+                        logger.info(f'[WebDAV] [{current_employee_name}] Created event for {item} of {config.months[str(month)]}')
 
                     if c_w[item] == 'ОТ' and c_w[item] != current_employee_name:
                         if not vacation_flag:
@@ -731,12 +735,13 @@ def init_bot(message):
 def web_dav_menu(message):
     telegram_id = message.from_user.id
     webdav_info = WebDAV().get_webdav_info(str(telegram_id))
-    text_message = f"Информация о WebDAV:\nНазвание календаря: {webdav_info['name']}\n"\
-                    f"URL календаря: {webdav_info['url']}\n\nИнформация для подключения к серверу:\n"\
-                    f"Адрес: https://webdav.fqrmix.ru\nЛогин: {webdav_info['login']}\nПароль: {webdav_info['password']}"
+    text_message = f"*Название календаря:* `{webdav_info['name']}`\n"\
+                    f"*URL календаря:* {webdav_info['url']}\n\n*Информация для подключения к серверу:*\n\n"\
+                    f"*Адрес:* https://webdav.fqrmix.ru\n*Логин:* `{webdav_info['login']}`\n*Пароль:* `{webdav_info['password']}`"
     bot.send_message(
         chat_id=message.chat.id,
-        text=text_message
+        text=text_message,
+        parse_mode='markdown'
     )
 
 # Subscription menu
@@ -876,7 +881,7 @@ def load_employers_csv(message):
             logger.info("[load] График на следующий месяц загружен!")
             current_month = datetime.date.today().month
             next_month = current_month + 1 if current_month != 12 else 1
-            WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar()
+            WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
         except Exception as error:
             logger.error(error, exc_info = True)
 
@@ -918,11 +923,14 @@ def handle_workers(message):
                 raise ValueError(err_msg)
             if sign == '' and numeric_value == '':
                 past_day = value
+                day_str = f"Работающие {past_day} числа текущего месяца:"
             else:
                 if sign == '+':
                     past_day = str(datetime.date.today().day + int(numeric_value))
+                    day_str = f"{past_day} числа текущего месяца будут работать:"
                 elif sign == '-':
                     past_day = str(datetime.date.today().day - int(numeric_value))
+                    day_str = f"{past_day} числа текущего месяца работали:"
             
             now = datetime.datetime.now()
             past_week_day = datetime.date(
@@ -930,7 +938,7 @@ def handle_workers(message):
                 month=now.month,
                 day=int(past_day)).isoweekday()
 
-            send_today_workers(message.chat.id, past_day, week_day=past_week_day)
+            send_today_workers(message.chat.id, past_day, week_day=past_week_day, current_day_text=day_str)
     except Exception as error:
         logger.error(error, exc_info = True)
 
