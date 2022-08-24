@@ -4,5 +4,4 @@ __pycache__
 .pylintrc
 .env
 .DS_Store
-test.py
-workers.py
+*test.py

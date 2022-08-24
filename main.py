@@ -1,12 +1,15 @@
+from sys import exc_info
 import threading
 import csv
 import time
 import locale
 import datetime
 import logging
+import uuid
 import schedule
 import telebot
 import config
+import caldav
 
 ####################
 ## Settings block ##
@@ -18,12 +21,24 @@ locale.setlocale(locale.LC_ALL, '')
 # Logger
 logger = telebot.logger
 logger.setLevel(logging.INFO)
-logging.basicConfig(filename='telegram-bot.log', level=logging.INFO,
-                    format=' %(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s')
+file_handler = logging.FileHandler('telegram-bot.log')
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+
+trace_logger = logging.getLogger('logger')
+trace_logger .setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - [%(trace_id)s] - %(message)s')
+file_handler = logging.FileHandler('telegram-bot.log')
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.INFO)
+trace_logger.addHandler(file_handler)
+
 
 # Telegram Bot init
 bot = telebot.TeleBot(config.TELEGRAM_TOKEN)
-chatter_list_ids = []
+chatter_list = []
 
 #####################
 ## Basic functions ##
@@ -233,7 +248,7 @@ def create_chatters_str(employer_list, current_day, current_month):
             *current_month == Current month with str() type
     '''
     text_message = ''
-    global chatter_list_ids
+    global chatter_list
     try:
         for current_employer in employer_list:
             if current_employer[current_day] != "" and current_employer[current_day] != "ОТ":
@@ -244,11 +259,17 @@ def create_chatters_str(employer_list, current_day, current_month):
                     actual_employer_telegramid = actual_employer_info['telegram_id']
                     text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
                                     f" | `{actual_employer_group}`\n"
-                    chatter_list_ids.append(actual_employer_telegramid)
-        if chatter_list_ids == [] or text_message == '':
-            err_msg = "[chatter-list] Chatters string wasn't generated (chatter_list_ids is empty)!"
+                    actual_chatter_info = {
+                        'telegram_id': actual_employer_telegramid,
+                        'lunch_time': False,
+                        'scheduled': False
+                    }
+                    chatter_list.append(actual_chatter_info)
+        if chatter_list == [] or text_message == '':
+            err_msg = "[chatter-list] Chatters string wasn't generated (chatter_list is empty)!"
             raise ValueError(err_msg)
         else:
+            print(chatter_list)
             logger.info(f"[chatter-list] Chatters string has been successfully generated!")
             return text_message
     except Exception as error:
@@ -400,7 +421,7 @@ class Subscription:
                 current_employee_sub['time_to_notify'] = current_employee['subscription']['time_to_notify']
                 cls.active_sub_list.append(current_employee_sub)
                 current_employee_sub = {}
-        print(cls.get_active_subs())
+        logger.info(msg=f"[Sub] Subscription class was initialized. Found active subs:\n{cls.get_active_subs()}")
 
     @classmethod
     def get_active_subs(cls):
@@ -411,83 +432,275 @@ class Subscription:
         try:
             with open(config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
                 config.json.dump(cls.employees_info, info_json, indent=4, ensure_ascii=False)
+            logger.info(msg="Subscription JSON info was dumped to server")
         except Exception as error:
-            print(error)
+            logger.error(error, exc_info = True)
         
     @classmethod
     def get_sub_info(cls, telegram_id):
-        name, info = get_employer_name(
-            val=str(telegram_id),
-            parameter='telegram_id',
-            my_dict=cls.employees_info
-        )
-        for employee in cls.employees_info:
-            current_employee = cls.employees_info[employee]
-            if employee == name:
-                return current_employee['subscription']
+        try:
+            name, info = get_employer_name(
+                val=str(telegram_id),
+                parameter='telegram_id',
+                my_dict=cls.employees_info
+            )
+            for employee in cls.employees_info:
+                current_employee = cls.employees_info[employee]
+                if employee == name:
+                    logger.info(msg=f"[Sub] Found subscription info for userID: {telegram_id}")
+                    return current_employee['subscription']
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
     @classmethod
     def disable(cls, telegram_id):
-        name, info = get_employer_name(
-            val=str(telegram_id),
-            parameter='telegram_id',
-            my_dict=cls.employees_info
-        )
-        cls.employees_info[name]['subscription']['enabled'] = False
-        cls.save_sub()
-        return cls.employees_info[name]['subscription']
+        try:
+            name, info = get_employer_name(
+                val=str(telegram_id),
+                parameter='telegram_id',
+                my_dict=cls.employees_info
+            )
+            cls.employees_info[name]['subscription']['enabled'] = False
+            cls.save_sub()
+            logger.info(msg=f"[Sub] Subscription was disabled for userID: {telegram_id}")
+            return cls.employees_info[name]['subscription']
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
     @classmethod
     def enable(cls, telegram_id):
-        name, info = get_employer_name(
-            val=str(telegram_id),
-            parameter='telegram_id',
-            my_dict=cls.employees_info
-        )
-        cls.employees_info[name]['subscription']['enabled'] = True
-        cls.save_sub()
-        return cls.employees_info[name]['subscription']
+        try:
+            name, info = get_employer_name(
+                val=str(telegram_id),
+                parameter='telegram_id',
+                my_dict=cls.employees_info
+            )
+            cls.employees_info[name]['subscription']['enabled'] = True
+            cls.save_sub()
+            logger.info(msg=f"[Sub] Subscription was enabled for userID: {telegram_id}")
+            return cls.employees_info[name]['subscription']
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
     @classmethod
     def change_notification_time(cls, telegram_id, time):
-        name, info = get_employer_name(
-            val=str(telegram_id),
-            parameter='telegram_id',
-            my_dict=cls.employees_info
-        )
-        cls.employees_info[name]['subscription']['time_to_notify'] = time
-        cls.save_sub()
-        return cls.employees_info[name]['subscription']
+        try:
+            name, info = get_employer_name(
+                val=str(telegram_id),
+                parameter='telegram_id',
+                my_dict=cls.employees_info
+            )
+            cls.employees_info[name]['subscription']['time_to_notify'] = time
+            cls.save_sub()
+            logger.info(msg=f"[Sub] Time for subscription was changed to {time} for userID: {telegram_id}")
+            return cls.employees_info[name]['subscription']
+        except Exception as error:
+            logger.error(error, exc_info = True)
     
     @classmethod
     def __sending_job__(cls, actual_employee):
-        bot.send_message(
-                chat_id = actual_employee['telegram_id'],
-                parse_mode = "Markdown",
-                text = f"Привет!\nТы завтра работаешь с {actual_employee['shift_start']} до {actual_employee['shift_end']}"
-            )
-        return schedule.CancelJob
+        try:
+            bot.send_message(
+                    chat_id = actual_employee['telegram_id'],
+                    parse_mode = "Markdown",
+                    text = f"Привет!\nТы завтра работаешь с {actual_employee['shift_start']} до {actual_employee['shift_end']}"
+                )
+            logger.info(msg=f"[Sub] Subscription message was send to user: {actual_employee['name']}")
+            return schedule.CancelJob
+        except Exception as error:
+            bot.send_message(
+                    chat_id = actual_employee['telegram_id'],
+                    text = f"Exception raised! Check log file for detailed info."
+                )
+            logger.error(error, exc_info = True)
 
     @classmethod
     def create_schedule(cls):
-        with open(config.CSV_PATH, encoding = 'utf-8-sig') as csvfile:
-            csv_reader = csv.DictReader(csvfile, delimiter=';')
-            employer_list = list(csv_reader)
-        day = str(datetime.date.today().day + 1)
-        current_month = config.months[str(datetime.date.today().month)]
-        for current_employee_sub in cls.active_sub_list:
-            for current_employee in employer_list:
-                if current_employee[current_month] == current_employee_sub['name']:
-                    if current_employee[day] != "" and current_employee[day] != "ОТ":
-                        actual_employee = create_actual_employee(current_employee, current_month, day)
-                        schedule.every().day.at(current_employee_sub['time_to_notify']).do(
-                            cls.__sending_job__,
-                            actual_employee=actual_employee
-                        )
-                        print(f"Schedule for {current_employee_sub['name']} was created, time: {current_employee_sub['time_to_notify']}")
+        try:
+            with open(config.CSV_PATH, encoding = 'utf-8-sig') as csvfile:
+                csv_reader = csv.DictReader(csvfile, delimiter=';')
+                employer_list = list(csv_reader)
+            day = str(datetime.date.today().day + 1)
+            current_month = config.months[str(datetime.date.today().month)]
+            for current_employee_sub in cls.active_sub_list:
+                for current_employee in employer_list:
+                    if current_employee[current_month] == current_employee_sub['name']:
+                        if current_employee[day] != "" and current_employee[day] != "ОТ":
+                            actual_employee = create_actual_employee(current_employee, current_month, day)
+                            schedule.every().day.at(current_employee_sub['time_to_notify']).do(
+                                cls.__sending_job__,
+                                actual_employee=actual_employee
+                            )
+                            logger.info(
+                                msg=f"[Sub] Schedule for {current_employee_sub['name']} was created," \
+                                    f"time: {current_employee_sub['time_to_notify']}")
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
 # Initialization of Subscription class and starting schedule
 Subscription().create_schedule() 
+
+###########################
+#####  WebDAV block  ######
+###########################
+
+class Client:
+    def __init__(self, login, password) -> None:
+        webdav_url = 'https://webdav.fqrmix.ru'
+        self.current_client = caldav.DAVClient(
+            url=webdav_url,
+            username=login,
+            password=password
+        )
+        self.current_principle = self.current_client.principal()
+        try:
+            self.work_calendar = self.current_principle.calendar(name="Work")
+            assert self.work_calendar
+            self.work_calendar_url = self.work_calendar.url
+            assert self.work_calendar_url
+        except caldav.error.NotFoundError:
+            self.work_calendar = self.current_principle.make_calendar(name="Work")
+            self.work_calendar_url = self.work_calendar.url
+            assert self.work_calendar_url     
+
+    
+
+    def get_calendars(self):
+        calendars = self.current_principle.calendars()
+        current_calendars = []
+        current_calendar = {}
+        if calendars:
+            for c in calendars:
+                current_calendar['name'] = c.name
+                current_calendar['url'] = c.url
+                current_calendars.append(current_calendar)
+            return current_calendars
+        else:
+            return None
+
+    def create_event(self, date_start, date_end, summary, month, time_start, time_end):
+        try:
+            event = self.work_calendar.save_event(
+                dtstart=datetime(2022, month, date_start, time_start),
+                dtend=datetime(2022, month, date_end, time_end),
+                summary=summary
+            )
+        except Exception as error:
+            logger.error(error, exc_info=True)
+
+    def get_events(self, calendar_name):
+        result = self.current_principle.calendar(name=calendar_name).events()
+        if result == []:
+            return None
+        else:
+            return result
+    
+    def delete_all_events(self, calendar_name):
+        try:
+            all_events = self.get_events(calendar_name=calendar_name)
+            if all_events:
+                for event in all_events:
+                    event.delete()
+            else:
+                print('Calendar is empty!')
+        except Exception as error:
+            logger.error(error, exc_info=True)
+        
+
+
+
+class WebDAV:
+    def __init__(self, path=None) -> None:
+        if path is not None:
+            self.employee_list = self.get_employee_list(path)
+        else:
+            self.employee_list = self.get_employee_list(config.CSV_PATH)
+        self.employeеs_info = config.employers_info
+    
+    def get_webdav_info(self, telegram_id):
+        try:
+            webdav_info = {}
+            for employee in self.employeеs_info:
+                current_employee = self.employeеs_info[employee]
+                if current_employee['telegram_id'] == telegram_id:
+                    webdav_info['name'] = current_employee['webdav']['name']
+                    webdav_info['url'] = current_employee['webdav']['url']
+                    webdav_info['login'] = current_employee['telegram']
+                    webdav_info['password'] = current_employee['webdav']['password']
+            return webdav_info
+        except Exception as error:
+            logger.error(error, exc_info=True)
+
+    def save_info(self):
+        try:
+            with open(config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
+                config.json.dump(self.employeеs_info, info_json, indent=4, ensure_ascii=False)
+        except Exception as error:
+            logger.error(error, exc_info=True)
+    
+    def generate_calendar(self, month):
+        try:
+            for c_w in self.employee_list:
+                current_employee_name = c_w[config.months[str(month)]]
+                print(current_employee_name)
+                current_employee_info = self.employeеs_info[current_employee_name]
+                actual_employee_login = current_employee_info['telegram']
+                actual_employee_password = current_employee_info['webdav']['password']
+                current_client = Client(actual_employee_login, actual_employee_password)
+                vacation_flag = False
+                vacation_day_start = 0
+                vacation_day_end = 0
+                for item in c_w:
+                    if c_w[item] != '' and c_w[item] != 'ОТ' and c_w[item] != current_employee_name:
+                        shift_start = config.working_shift[c_w[item][0]]['start'].split(':')
+                        shift_end = config.working_shift[c_w[item][0]]['end'].split(':')
+                        int_shift_start = int(shift_start[0])
+                        int_shift_end = int(shift_end[0])
+                        int_day_start = int(item)
+                        int_day_end = int(item)
+                        print(f"День: {item}\nСмена: {int(shift_start[0])} - {int(shift_end[0])}\n")
+                        if int_shift_start == 12 and int_shift_end == 0:
+                            int_day_end = int(item) + 1
+                        current_client.create_event(
+                            date_start=int_day_start,
+                            date_end=int_day_end,
+                            month=month,
+                            time_start=int_shift_start,
+                            time_end=int_shift_end,
+                            summary='Смена'
+                        )
+                        logger.info(f'[{current_employee_name}] Created event for {item} of {config.months[str(month)]}')
+
+                    if c_w[item] == 'ОТ' and c_w[item] != current_employee_name:
+                        if not vacation_flag:
+                            vacation_flag = True
+                            vacation_day_start = int(item)
+                            vacation_day_end = vacation_day_start
+                        else:
+                            vacation_day_end = int(item)
+                    if c_w[item] != 'ОТ' and vacation_flag and c_w[item] != current_employee_name:
+                        vacation_flag = False
+                if vacation_day_start > 0 and vacation_day_end > 0:
+                    current_client.create_event(
+                                date_start=vacation_day_start,
+                                date_end=vacation_day_end,
+                                month=month,
+                                time_start=0,
+                                time_end=12,
+                                summary='Отпуск'
+                            )
+                self.employeеs_info[current_employee_name]['webdav']['url'] = str(current_client.work_calendar_url)
+                self.save_info()
+        except Exception as error:
+            logger.error(error, exc_info=True)
+                        
+
+    @staticmethod
+    def get_employee_list(path):
+        with open(path, encoding = 'utf-8-sig') as csvfile:
+            csv_reader = csv.DictReader(csvfile, delimiter=';')
+            employee_list = list(csv_reader)
+        return employee_list
 
 ###########################
 ## Telegram Bot Handlers ##
@@ -513,6 +726,19 @@ def init_bot(message):
     except Exception as error:
         logger.error(error, exc_info = True)
 
+# WebDAV menu
+@bot.message_handler(commands=['webdav'])
+def web_dav_menu(message):
+    telegram_id = message.from_user.id
+    webdav_info = WebDAV().get_webdav_info(str(telegram_id))
+    text_message = f"Информация о WebDAV:\nНазвание календаря: {webdav_info['name']}\n"\
+                    f"URL календаря: {webdav_info['url']}\n\nИнформация для подключения к серверу:\n"\
+                    f"Адрес: https://webdav.fqrmix.ru\nЛогин: {webdav_info['login']}\nПароль: {webdav_info['password']}"
+    bot.send_message(
+        chat_id=message.chat.id,
+        text=text_message
+    )
+
 # Subscription menu
 @bot.message_handler(commands=['subscription', 'sub'])
 def sub_menu(message):
@@ -523,18 +749,15 @@ def sub_menu(message):
     text_message = f"Статус подписки: {sub_status}\nВремя для уведомлений: {sub_notify_time}" if sub_info['enabled'] else \
                     f"Статус подписки: {sub_status}"
     bot.send_message(
-        message.chat.id, 
-        text = text_message, 
-        reply_markup = build_keyboard('main_sub')
+        chat_id=message.chat.id, 
+        text=text_message, 
+        reply_markup=build_keyboard('main_sub')
     )
 
 # Subscription menu callback handler
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    if call.data == "youtube":
-        pass
-
-    elif call.data == 'change_sub':
+    if call.data == 'change_sub':
         bot.edit_message_text(
             chat_id = call.message.chat.id,
             message_id = call.message.message_id,
@@ -651,6 +874,9 @@ def load_employers_csv(message):
                 csv_file.write(downloaded_file)
             bot.reply_to(message, "График на следующий месяц загружен!")
             logger.info("[load] График на следующий месяц загружен!")
+            current_month = datetime.date.today().month
+            next_month = current_month + 1 if current_month != 12 else 1
+            WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar()
         except Exception as error:
             logger.error(error, exc_info = True)
 
@@ -761,15 +987,26 @@ def handle_out(message):
 # Auto-out for lunch
 @bot.poll_answer_handler()
 def handle_poll_answer(pollAnswer):
-    global chatter_list_ids
+    global chatter_list
+    lunch_time = get_lunch_time(pollAnswer.option_ids[0])
+    logger.info(f'[poll-answer-handler] User {pollAnswer.user.id} has choosen {lunch_time} time for lunch')
     try:
-        if str(pollAnswer.user.id) in chatter_list_ids:
-            lunch_time = get_lunch_time(pollAnswer.option_ids[0])
-            print(lunch_time)
-            schedule.every().day.at(lunch_time).do(
-                chatter_list_job,
-                employer_telegram_id = pollAnswer.user.id
-            )
+        for current_chatter in chatter_list:
+            if current_chatter['telegram_id'] == str(pollAnswer.user.id):
+                logger.info(f'[poll-answer-handler] User {pollAnswer.user.id} was found in chatter list\nSubject: {chatter_list}')
+                if current_chatter['scheduled']:
+                    logger.info(f'[poll-answer-handler] Schedule for user {pollAnswer.user.id} was already created, removing...')
+                    schedule.clear(str(pollAnswer.user.id))
+                    logger.info(f'[poll-answer-handler] Previous schedule for user {pollAnswer.user.id} was removed')
+                schedule.every().day.at(lunch_time).do(
+                    chatter_list_job,
+                    employer_telegram_id = pollAnswer.user.id
+                ).tag(str(pollAnswer.user.id))
+                logger.info(f'[poll-answer-handler] Schedule for lunch-out was created for user {pollAnswer.user.id}')
+                current_chatter['lunch_time'] = lunch_time
+                current_chatter['scheduled'] = True
+                logger.info(f"[poll-answer-handler] User {pollAnswer.user.id} lunch time: {current_chatter['lunch_time']}\nSchedule status: {current_chatter['scheduled']}")
+                print(schedule.get_jobs(str(pollAnswer.user.id)))
     except Exception as error:
         logger.error(error, exc_info = True)
 
@@ -878,17 +1115,20 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
 ############################
 
 if __name__ == '__main__':
+    logger_data = {
+            'trace_id': uuid.uuid4()
+        }
     current_date = datetime.date.today()
-    logger.info(f'[main] Current date: {current_date}')
+    trace_logger.info(f'[main] Current date: {current_date}', extra=logger_data)
     if current_date.day == 1:
-        logger.info('[main] Time to new CSV...\nUpdating')
+        trace_logger.info('[main] Time to new CSV...\nUpdating')
         update_actual_csv(config.NEXT_MONTH_CSV_PATH, config.CSV_PATH) # Update actual CSV file
-        logger.info('[main] CSV file was successfully loaded! Strarting polling!')
+        trace_logger.info('[main] CSV file was successfully loaded! Strarting polling!', extra=logger_data)
         stop_run_continuously = run_continuously()
         bot.infinity_polling()
         stop_run_continuously.set()
     else:
-        logger.info("[main] New CSV doesn't needed! Starting polling!")
+        trace_logger.info("[main] New CSV doesn't needed! Starting polling!", extra=logger_data)
         stop_run_continuously = run_continuously()
         bot.infinity_polling()
         stop_run_continuously.set()
