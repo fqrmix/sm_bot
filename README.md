@@ -1,6 +1,5 @@
 # Shopmaster Telegram Bot
 ## Description
-Это бот, который...
 
 ## Using
 1. Clone the repo:
