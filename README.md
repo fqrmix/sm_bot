@@ -30,6 +30,10 @@ Also it can be used that way:
 - > **/chatters** - Get a chatter list for today;
 - > **/lunch** - Send a lunch-poll;
 - > **/out** - Go out for lunch.
+- > **/sub** - Subscription to notifications info
+- > **/addchatter** - Add user to chat-list
+- > **/removechatter** - Remove user from chat-list
+- > **/webdav** - CalDAV sync settings
 
 
 ## Project architecture
@@ -97,18 +101,46 @@ Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shi
     "Employer_name_1" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
-        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)"
+        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
+        "subscription": {
+            "enabled": bool,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "calendar_url",
+            "password": "password"
+        }
     },
     "Employer_name_2" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
-        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)"
+        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
+        "subscription": {
+            "enabled": bool,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "calendar_url",
+            "password": "password"
+        }
     },
     .........
     "Employer_name_n" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
-        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)"
+        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
+        "subscription": {
+            "enabled": bool,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "calendar_url",
+            "password": "password"
+        }
     }
+    
 }
 ```
