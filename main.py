@@ -212,6 +212,7 @@ def build_keyboard(keyboard_type):
         main_menu_button_list = [
             telebot.types.InlineKeyboardButton(text = 'Изменить время уведомления', callback_data = 'change_time'),
             telebot.types.InlineKeyboardButton(text = 'Изменить параметры подписки', callback_data = 'change_sub'),
+            telebot.types.InlineKeyboardButton(text = '<< Отмена', callback_data = 'cancel')
         ]
         keyboard.add(*main_menu_button_list)
         return keyboard
@@ -228,7 +229,7 @@ def build_keyboard(keyboard_type):
     
     if keyboard_type == 'back_to_main_keyboard':
         keyboard = telebot.types.InlineKeyboardMarkup(row_width = 1)
-        keyboard.add(telebot.types.InlineKeyboardButton(text = '<< Get back', callback_data = 'back_to_main'))
+        keyboard.add(telebot.types.InlineKeyboardButton(text = '<< Назад', callback_data = 'back_to_main'))
         return keyboard
 
 
@@ -335,7 +336,6 @@ class WebDAV:
         try:
             for c_w in self.employee_list:
                 current_employee_name = c_w[config.months[str(month)]]
-                print(current_employee_name)
                 current_employee_info = self.employeеs_info[current_employee_name]
                 actual_employee_login = current_employee_info['telegram']
                 actual_employee_password = current_employee_info['webdav']['password']
@@ -351,7 +351,6 @@ class WebDAV:
                         int_shift_end = int(shift_end[0])
                         int_day_start = int(item)
                         int_day_end = int(item)
-                        print(f"День: {item}\nСмена: {int(shift_start[0])} - {int(shift_end[0])}\n")
                         if int_shift_start == 12 and int_shift_end == 0:
                             int_day_end = int(item) + 1
                         current_client.create_event(
@@ -650,7 +649,7 @@ class Chatters(DayWorkers):
         try:
             chattter_menu_button_list = []
             if direction == 'in':
-                keyboard = telebot.types.InlineKeyboardMarkup(row_width = 2)
+                keyboard = telebot.types.InlineKeyboardMarkup(row_width = 1)
                 for current_employee in self.workers_list:
                     if current_employee not in self.chatter_list:
                         button = telebot.types.InlineKeyboardButton(
@@ -658,7 +657,7 @@ class Chatters(DayWorkers):
                             callback_data = 'chatter_' + current_employee['telegram_id'])
                         chattter_menu_button_list.append(button)
                 back_button = telebot.types.InlineKeyboardButton(
-                            text = 'Назад', 
+                            text = '<< Отмена', 
                             callback_data = 'cancel')
                 chattter_menu_button_list.append(back_button)
                 keyboard.add(*chattter_menu_button_list)
@@ -672,11 +671,13 @@ class Chatters(DayWorkers):
                             callback_data = 'removechatter_' + current_employee['telegram_id'])
                         chattter_menu_button_list.append(button)
                 back_button = telebot.types.InlineKeyboardButton(
-                            text = 'Назад', 
+                            text = '<< Отмена', 
                             callback_data = 'cancel')
                 chattter_menu_button_list.append(back_button)
                 keyboard.add(*chattter_menu_button_list)
                 return keyboard
+            else:
+                raise ValueError('Wrong direction value in build_chatter_keyboard')
         except Exception as error:
             logger.error(error, exc_info = True)
     
@@ -704,9 +705,9 @@ class Chatters(DayWorkers):
                 if current_emoloyer['telegram_id'] == telegram_id:
                     self.chatter_list.append(current_emoloyer)
                     if current_emoloyer['group'] == 'Poisk':
-                        chat_id = 966243980
+                        chat_id = config.GROUP_CHAT_ID_POISK
                     else:
-                        chat_id = 966243980
+                        chat_id = config.GROUP_CHAT_ID_SM
                     text_message = f"[{current_emoloyer['name']}](tg://user?id={current_emoloyer['telegram_id']}), "\
                         f"привет! Заходи, пожалуйста, в чаты."
                     message = bot.send_message(
@@ -744,9 +745,9 @@ class Chatters(DayWorkers):
                 if current_emoloyer['telegram_id'] == telegram_id:
                     self.chatter_list.remove(current_emoloyer)
                     if current_emoloyer['group'] == 'Poisk':
-                        chat_id = 966243980
+                        chat_id = config.GROUP_CHAT_ID_POISK
                     else:
-                        chat_id = 966243980
+                        chat_id = config.GROUP_CHAT_ID_SM
                     text_message = f"[{current_emoloyer['name']}](tg://user?id={current_emoloyer['telegram_id']}), "\
                         f"привет! Выходи, пожалуйста, из чатов и заходи в линию."
                     message = bot.send_message(
@@ -852,7 +853,6 @@ def chatter_list_job(employer_telegram_id):
             parameter='telegram_id', 
             my_dict=config.employers_info
         )
-        print(employer_info)
         if employer_info['group'] == 'ShopMaster':
             chat_id = config.GROUP_CHAT_ID_SM
             pass
@@ -865,6 +865,7 @@ def chatter_list_job(employer_telegram_id):
                 text = f"[{employer_name}](tg://user?id={employer_telegram_id}) скоро уйдет на обед."\
                     f"\nКоллеги, подмените пожалуйста его в чатах."
             )
+            logger.info(msg=f"[chatter-job] Chatter job was completed for {employer_info['name']}")
             return schedule.CancelJob
         else:
             return schedule.CancelJob
@@ -875,11 +876,22 @@ def chatter_list_job(employer_telegram_id):
 ## Initialization block ###
 ###########################
 
+logger_data = {
+            'trace_id': uuid.uuid4()
+        }
+
+current_date = datetime.date.today()
+if current_date.day == 1:
+    trace_logger.info('[main] Time to new CSV...\nUpdating', extra=logger_data)
+    update_actual_csv(config.NEXT_MONTH_CSV_PATH, config.CSV_PATH) # Update actual CSV file
+    trace_logger.info('[main] CSV file was successfully loaded! Strarting polling!', extra=logger_data)
+else:
+    trace_logger.info("[main] New CSV doesn't needed! Starting polling!", extra=logger_data)
+
 bot = telebot.TeleBot(config.TELEGRAM_TOKEN)
 today_workers = DayWorkers()
 today_chatters = Chatters()
 Subscription().create_schedule()
-chatter_list = []
 
 ###########################
 ## Telegram Bot Handlers ##
@@ -1040,6 +1052,9 @@ def callback_inline(call):
                 message_id = call.message.message_id,
                 text = 'Готово, сообщение для сотрудника отправлено в соответствующий чат!', 
                 reply_markup = '')
+        
+        elif call.data == 'cancel':
+            bot.delete_message(call.message.chat.id, call.message.message_id)
         
     except Exception as error:
         bot.send_message(
@@ -1250,7 +1265,6 @@ def handle_out(message):
             val = str(employer_telegram_id),
             parameter = 'telegram_id',
             my_dict = config.employers_info)
-        print(employer_name)
         if employer_name is None:
             bot.send_message(
                 chat_id = message.chat.id,
@@ -1293,7 +1307,6 @@ def handle_poll_answer(pollAnswer):
                     logger.info(f"[poll-answer-handler] User {pollAnswer.user.id} "\
                         f"lunch time: {current_chatter['chat']['lunch_time']}, "\
                         f"schedule status: {current_chatter['chat']['scheduled']}")
-                    print(schedule.get_jobs(str(pollAnswer.user.id)))
         except Exception as error:
             logger.error(error, exc_info = True)
 
@@ -1324,6 +1337,7 @@ def handle_log(message):
     except Exception as error:
         logger.error(error, exc_info = True)
         bot.reply_to(message, text=error)
+
 
 ########################
 ####### Sсhedule #######
@@ -1365,8 +1379,6 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
     chat_id=config.GROUP_CHAT_ID_POISK,
-    current_day=current_day,
-    week_day=current_week_day
 )
 
 # Send chatters list message to SM/POISK chat groups
@@ -1398,20 +1410,6 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
 ############################
 
 if __name__ == '__main__':
-    logger_data = {
-            'trace_id': uuid.uuid4()
-        }
-    current_date = datetime.date.today()
-    trace_logger.info(f'[main] Current date: {current_date}', extra=logger_data)
-    if current_date.day == 1:
-        trace_logger.info('[main] Time to new CSV...\nUpdating')
-        update_actual_csv(config.NEXT_MONTH_CSV_PATH, config.CSV_PATH) # Update actual CSV file
-        trace_logger.info('[main] CSV file was successfully loaded! Strarting polling!', extra=logger_data)
-        stop_run_continuously = run_continuously()
-        bot.infinity_polling()
-        stop_run_continuously.set()
-    else:
-        trace_logger.info("[main] New CSV doesn't needed! Starting polling!", extra=logger_data)
-        stop_run_continuously = run_continuously()
-        bot.infinity_polling()
-        stop_run_continuously.set()
+    stop_run_continuously = run_continuously()
+    bot.infinity_polling()
+    stop_run_continuously.set()
