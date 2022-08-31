@@ -3,6 +3,7 @@ import csv
 import time
 import locale
 import datetime
+import calendar
 import logging
 import uuid
 import schedule
@@ -153,8 +154,14 @@ class Subscription:
     @classmethod
     def create_schedule(cls):
         try:
-            all_employees = Employees()
-            day = str(datetime.date.today().day + 1)
+            now = datetime.datetime.now()
+            current_month_days = calendar.monthrange(now.year, now.month)[1]
+            if datetime.date.today().day + 1 > current_month_days:
+                day = '1'
+                all_employees = Employees(next_month=True)
+            else:
+                day = str(datetime.date.today().day + 1)
+                all_employees = Employees()
             for current_employee_sub in cls.active_sub_list:
                 for current_employee in all_employees.employees:
                     if current_employee['name'] == current_employee_sub['name']:
@@ -170,6 +177,7 @@ class Subscription:
                                     f" time: {current_employee_sub['time_to_notify']}")
         except Exception as error:
             logger.error(error, exc_info = True)
+
 def handle_change_subtime(message, telegram_id):
     splited_time = message.text.split(':')
     if len(splited_time) < 2 or \
@@ -392,38 +400,48 @@ class WebDAV:
 ###################
 
 class Employees:
-    def __init__(self) -> None:
-        employees_list = self.get_employer_list(config.CSV_PATH)
-        fulltime_employees_list = self.get_employer_list(config.CSV_PATH_5_2)
-        self.employees = []
-        self.fulltime_employees = []
-        actual_employee = {
-            'name': '',
-            'shifts': {}
-        }
-
-        # Creating 2/2 employees list
-        for employee in employees_list:
-            for current_employee in employee:
-                if len(employee[current_employee]) > 2:
-                    actual_employee['name'] = employee[current_employee]
-                else:
-                    actual_employee['shifts'][current_employee] = employee[current_employee]
-            self.employees.append(actual_employee)
+    def __init__(self, next_month=False) -> None:
+        try:
+            if not next_month:
+                employees_list = self.get_employer_list(config.CSV_PATH)
+            else:
+                employees_list = self.get_employer_list(config.NEXT_MONTH_CSV_PATH)
+            logger.info(msg="[employees] Shift employees list was dumped from CSV")
+            fulltime_employees_list = self.get_employer_list(config.CSV_PATH_5_2)
+            logger.info(msg="[employees] Fulltime employees list was dumped from CSV")
+            self.employees = []
+            self.fulltime_employees = []
             actual_employee = {
                 'name': '',
                 'shifts': {}
             }
-        
-        # Creating 5/2 employess list
-        for employee in fulltime_employees_list:
-            actual_employee['name'] = employee['5/2']
-            actual_employee['shifts']['Any'] = employee['Any']
-            self.fulltime_employees.append(actual_employee)
-            actual_employee = {
-                'name': '',
-                'shifts': {}
-            }  
+
+            logger.info(msg="[employees] Creating in-self class lists")
+            # Creating 2/2 employees list
+            for employee in employees_list:
+                for current_employee in employee:
+                    if len(employee[current_employee]) > 2:
+                        actual_employee['name'] = employee[current_employee]
+                    else:
+                        actual_employee['shifts'][current_employee] = employee[current_employee]
+                self.employees.append(actual_employee)
+                actual_employee = {
+                    'name': '',
+                    'shifts': {}
+                }
+            
+            # Creating 5/2 employess list
+            for employee in fulltime_employees_list:
+                actual_employee['name'] = employee['5/2']
+                actual_employee['shifts']['Any'] = employee['Any']
+                self.fulltime_employees.append(actual_employee)
+                actual_employee = {
+                    'name': '',
+                    'shifts': {}
+                }
+            logger.info(msg=f"[employees] In-self class lists was created. Scope: {self.employees}\n{self.fulltime_employees}")
+        except Exception as error:
+            logger.error(error, exc_info=True)
 
     @staticmethod
     def get_employer_list(path):
@@ -442,12 +460,13 @@ class DayWorkers(Employees):
         else:
             self.current_day = current_day
             now = datetime.datetime.now()
+
             past_week_day = datetime.date(
                 year=now.year,
                 month=now.month,
                 day=int(current_day)).isoweekday()
             self.week_day = past_week_day
-        
+    
         self.workers_list = []
 
         for current_employer in self.employees:
@@ -471,47 +490,57 @@ class DayWorkers(Employees):
                         'Any'
                         )
                     self.workers_list.append(actual_employee)
+        logger.info(msg=f"[day-workers] DayWorkers class was initilated. Scope: {self.workers_list}")
 
     def split_by_group(self) -> list:
-        shopmasters_list = []
-        poisk_list = []
-        others_list = []
-        for current_employer in self.workers_list:
-            if current_employer['group'] == 'ShopMaster':
-                shopmasters_list.append(current_employer)
-            elif current_employer['group'] == 'Poisk':
-                poisk_list.append(current_employer)
-            else:
-                others_list.append(current_employer)
-        shopmasters_list.sort(key=self.sort_by_shift)
-        poisk_list.sort(key=self.sort_by_shift)
-        others_list.sort(key=self.sort_by_shift)
-        return shopmasters_list, poisk_list, others_list
+        try:
+            shopmasters_list = []
+            poisk_list = []
+            others_list = []
+            for current_employer in self.workers_list:
+                if current_employer['group'] == 'ShopMaster':
+                    shopmasters_list.append(current_employer)
+                elif current_employer['group'] == 'Poisk':
+                    poisk_list.append(current_employer)
+                else:
+                    others_list.append(current_employer)
+            shopmasters_list.sort(key=self.sort_by_shift)
+            poisk_list.sort(key=self.sort_by_shift)
+            others_list.sort(key=self.sort_by_shift)
+            logger.info(msg=f"[day-workers] Workers list was successfully splited by group")
+            return shopmasters_list, poisk_list, others_list
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
     def send_message(self, chat_id, current_day_text='Сегодня работают:') -> str:
-        shopmasters_list, poisk_list, others_list = self.split_by_group()
-        current_day_sm = self.create_str(shopmasters_list) 
-        current_day_sm_text = f'*Шопмастера:*\n{current_day_sm}'\
-            if shopmasters_list != [] else ''
-        current_day_poisk = self.create_str(poisk_list)
-        current_day_poisk_text = f'*Поиск:*\n{current_day_poisk}'\
-            if poisk_list != [] else ''
-        current_day_others = self.create_str(others_list)
-        current_day_others_text = f'*CMS/LK:*\n{current_day_others}'\
-            if others_list != [] else ''
-        text_message = f'*{current_day_text}*\n\n{current_day_sm_text}\n'\
-                        f'{current_day_poisk_text}\n'\
-                        f'{current_day_others_text}'
-        bot_message = bot.send_message(
-            chat_id = chat_id,
-            parse_mode = 'Markdown',
-            text = text_message
-        )
-        if current_day_text == 'Сегодня работают:':
-            bot.pin_chat_message(
-                    chat_id=chat_id,
-                    message_id=bot_message.id
+        try:
+            shopmasters_list, poisk_list, others_list = self.split_by_group()
+            current_day_sm = self.create_str(shopmasters_list) 
+            current_day_sm_text = f'*Шопмастера:*\n{current_day_sm}'\
+                if shopmasters_list != [] else ''
+            current_day_poisk = self.create_str(poisk_list)
+            current_day_poisk_text = f'*Поиск:*\n{current_day_poisk}'\
+                if poisk_list != [] else ''
+            current_day_others = self.create_str(others_list)
+            current_day_others_text = f'*CMS/LK:*\n{current_day_others}'\
+                if others_list != [] else ''
+            text_message = f'*{current_day_text}*\n\n{current_day_sm_text}\n'\
+                            f'{current_day_poisk_text}\n'\
+                            f'{current_day_others_text}'
+            bot_message = bot.send_message(
+                chat_id = chat_id,
+                parse_mode = 'Markdown',
+                text = text_message
             )
+            logger.info(msg=f"[day-workers] Workers message was successfully send to chatID: {chat_id}")
+            if current_day_text == 'Сегодня работают:':
+                bot.pin_chat_message(
+                        chat_id=chat_id,
+                        message_id=bot_message.id
+                )
+                logger.info(msg=f"[day-workers] Workers message was successfully pinned to chatID: {chat_id}")
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
     """
     Workers class static methods
@@ -530,27 +559,31 @@ class DayWorkers(Employees):
 
     @staticmethod
     def create_actual_employee(current_employer, current_day):
-        actual_employee_name = current_employer['name']
-        actual_employee_info = config.employers_info[actual_employee_name]
-        actual_employee_group = actual_employee_info['group']
-        actual_employee_telegramid = actual_employee_info['telegram_id']
+        try:
+            actual_employee_name = current_employer['name']
+            actual_employee_info = config.employers_info[actual_employee_name]
+            actual_employee_group = actual_employee_info['group']
+            actual_employee_telegramid = actual_employee_info['telegram_id']
 
-        shift_start = config.working_shift[current_employer['shifts'][current_day][0]]['start']
-        shift_end = config.working_shift[current_employer['shifts'][current_day][0]]['end']
+            shift_start = config.working_shift[current_employer['shifts'][current_day][0]]['start']
+            shift_end = config.working_shift[current_employer['shifts'][current_day][0]]['end']
 
-        actual_employee = {
-            'name': actual_employee_name,
-            'group': actual_employee_group,
-            'telegram_id': actual_employee_telegramid,
-            'shift_start': shift_start,
-            'shift_end': shift_end,
-            'chat': {
-                'state': False,
-                'lunch_time': None,
-                'scheduled': False
+            actual_employee = {
+                'name': actual_employee_name,
+                'group': actual_employee_group,
+                'telegram_id': actual_employee_telegramid,
+                'shift_start': shift_start,
+                'shift_end': shift_end,
+                'chat': {
+                    'state': False,
+                    'lunch_time': None,
+                    'scheduled': False
+                }
             }
-        }
-        return actual_employee
+            logger.info(msg=f"[day-workers] Actual employee dict was generated. Subject: {actual_employee}")
+            return actual_employee
+        except Exception as error:
+            logger.error(error, exc_info = True)
     
     @staticmethod
     def create_str(group_list):
@@ -577,20 +610,28 @@ class Chatters(DayWorkers):
         for current_emoloyer in self.workers_list:
             if current_emoloyer['chat']['state']:
                 self.chatter_list.append(current_emoloyer)
-    
+        if self.chatter_list == []:
+            logger.info(f"[chatters] Not found chatters for today")
+        else:
+            logger.info(f"[chatters] Found chatters for today. Scope: {self.chatter_list}")
+
     def print_list(self):
         for chatter in self.chatter_list:
             print(chatter)
     
     def create_chatters_str(self):
-        text_message = ''
-        for current_chatter in self.chatter_list:
-            actual_employer_name = current_chatter['name']
-            actual_employer_group = current_chatter['group']
-            actual_employer_telegramid = current_chatter['telegram_id']
-            text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
-                            f" | `{actual_employer_group}`\n"
-        return text_message
+        try:
+            text_message = ''
+            for current_chatter in self.chatter_list:
+                actual_employer_name = current_chatter['name']
+                actual_employer_group = current_chatter['group']
+                actual_employer_telegramid = current_chatter['telegram_id']
+                text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
+                                f" | `{actual_employer_group}`\n"
+            logger.info(msg=f"[chatters] Chatters string was created. Subject: {text_message}")
+            return text_message
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
     def send_chatter_list(self, chat_id):
         try:
@@ -601,32 +642,51 @@ class Chatters(DayWorkers):
                 parse_mode='Markdown',
                 text=text_message
             )
-            logger.info(f"[chatter-list] Chatter string was successfully sent into chatID: {chat_id}")
+            logger.info(f"[chatters] Chatter string was successfully sent into chatID: {chat_id}")
         except Exception as error:
             logger.error(error, exc_info = True)
     
-    def build_chatter_keyboard(self):
-        chattter_menu_button_list = []
-        keyboard = telebot.types.InlineKeyboardMarkup(row_width = 2)
-        for current_employee in self.workers_list:
-            if not current_employee['chat']['state']:
-                button = telebot.types.InlineKeyboardButton(
-                    text = current_employee['name'], 
-                    callback_data = 'chatter_' + current_employee['telegram_id'])
-                chattter_menu_button_list.append(button)
-        back_button = telebot.types.InlineKeyboardButton(
-                    text = 'Назад', 
-                    callback_data = 'cancel')
-        chattter_menu_button_list.append(back_button)
-        keyboard.add(*chattter_menu_button_list)
-        return keyboard
+    def build_chatter_keyboard(self, direction: str):
+        try:
+            chattter_menu_button_list = []
+            if direction == 'in':
+                keyboard = telebot.types.InlineKeyboardMarkup(row_width = 2)
+                for current_employee in self.workers_list:
+                    if current_employee not in self.chatter_list:
+                        button = telebot.types.InlineKeyboardButton(
+                            text = current_employee['name'], 
+                            callback_data = 'chatter_' + current_employee['telegram_id'])
+                        chattter_menu_button_list.append(button)
+                back_button = telebot.types.InlineKeyboardButton(
+                            text = 'Назад', 
+                            callback_data = 'cancel')
+                chattter_menu_button_list.append(back_button)
+                keyboard.add(*chattter_menu_button_list)
+                return keyboard
+            elif direction == 'out':
+                keyboard = telebot.types.InlineKeyboardMarkup(row_width = 2)
+                for current_employee in self.chatter_list:
+                    if current_employee in self.chatter_list:
+                        button = telebot.types.InlineKeyboardButton(
+                            text = current_employee['name'], 
+                            callback_data = 'removechatter_' + current_employee['telegram_id'])
+                        chattter_menu_button_list.append(button)
+                back_button = telebot.types.InlineKeyboardButton(
+                            text = 'Назад', 
+                            callback_data = 'cancel')
+                chattter_menu_button_list.append(back_button)
+                keyboard.add(*chattter_menu_button_list)
+                return keyboard
+        except Exception as error:
+            logger.error(error, exc_info = True)
     
     def add_chatter_message(self, message):
         try:
+            logger.info(msg=f"[chatters] User {message.from_user.username} trying to add chatter")
             today_chatters = self.create_chatters_str()
             text_message = f"Сейчас в чатах:\n{today_chatters}\n"\
                 f"Выбери сотрудника для добавления:\n"
-            markup_keyboard = self.build_chatter_keyboard()
+            markup_keyboard = self.build_chatter_keyboard(direction='in')
             bot.send_message(
                 chat_id=message.chat.id,
                 text=text_message,
@@ -637,24 +697,69 @@ class Chatters(DayWorkers):
             logger.error(error, exc_info = True)
     
     def add_chatter(self, telegram_id):
-        chat_id = ''
-        text_message = ''
-        for current_emoloyer in self.workers_list:
-            if current_emoloyer['telegram_id'] == telegram_id:
-                self.chatter_list.append(current_emoloyer)
-                if current_emoloyer['group'] == 'Poisk':
-                    chat_id = config.GROUP_CHAT_ID_POISK
-                else:
-                    chat_id = config.GROUP_CHAT_ID_SM
-                text_message = f"[{current_emoloyer['name']}](tg://user?id={current_emoloyer['telegram_id']}), "\
-                    f"привет! Заходи, пожалуйста, в чаты."
-                message = bot.send_message(
-                    chat_id=chat_id,
-                    text=text_message,
-                    parse_mode='Markdown'
-                )
-                return message
+        try:
+            chat_id = ''
+            text_message = ''
+            for current_emoloyer in self.workers_list:
+                if current_emoloyer['telegram_id'] == telegram_id:
+                    self.chatter_list.append(current_emoloyer)
+                    if current_emoloyer['group'] == 'Poisk':
+                        chat_id = 966243980
+                    else:
+                        chat_id = 966243980
+                    text_message = f"[{current_emoloyer['name']}](tg://user?id={current_emoloyer['telegram_id']}), "\
+                        f"привет! Заходи, пожалуйста, в чаты."
+                    message = bot.send_message(
+                        chat_id=chat_id,
+                        text=text_message,
+                        parse_mode='Markdown'
+                    )
+                    logger.info(msg=f"[chatters] Chatter {current_emoloyer['name']} was successfully appended, "\
+                        f"message was sent to chatID: {chat_id}")
+                    return message
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
+    def remove_chatter_message(self, message):
+        try:
+            logger.info(msg=f"[chatters] User {message.from_user.username} trying to remove chatter")
+            today_chatters = self.create_chatters_str()
+            text_message = f"Сейчас в чатах:\n{today_chatters}\n"\
+                f"Выбери сотрудника для удаления:\n"
+            markup_keyboard = self.build_chatter_keyboard(direction='out')
+            bot.send_message(
+                chat_id=message.chat.id,
+                text=text_message,
+                parse_mode='Markdown',
+                reply_markup=markup_keyboard
+            )
+        except Exception as error:
+            logger.error(error, exc_info = True)
+    
+    def remove_chatter(self, telegram_id):
+        try:
+            chat_id = ''
+            text_message = ''
+            for current_emoloyer in self.workers_list:
+                if current_emoloyer['telegram_id'] == telegram_id:
+                    self.chatter_list.remove(current_emoloyer)
+                    if current_emoloyer['group'] == 'Poisk':
+                        chat_id = 966243980
+                    else:
+                        chat_id = 966243980
+                    text_message = f"[{current_emoloyer['name']}](tg://user?id={current_emoloyer['telegram_id']}), "\
+                        f"привет! Выходи, пожалуйста, из чатов и заходи в линию."
+                    message = bot.send_message(
+                        chat_id=chat_id,
+                        text=text_message,
+                        parse_mode='Markdown'
+                    )
+                    logger.info(msg=f"[chatters] Chatter {current_emoloyer['name']} was successfully removed, "\
+                        f"\nmessage was sent to chatID: {chat_id}")
+                    schedule.clear(telegram_id)
+                    return message
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
 #####################
 ## Basic functions ##
@@ -803,113 +908,146 @@ def init_bot(message):
 # WebDAV menu
 @bot.message_handler(commands=['webdav'])
 def web_dav_menu(message):
-    telegram_id = message.from_user.id
-    webdav_info = WebDAV().get_webdav_info(str(telegram_id))
-    text_message = f"*Название календаря:* `{webdav_info['name']}`\n"\
-                    f"*URL календаря:* {webdav_info['url']}\n\n*Информация для подключения к серверу:*\n\n"\
-                    f"*Адрес:* https://webdav.fqrmix.ru\n*Логин:* `{webdav_info['login']}`\n*Пароль:* `{webdav_info['password']}`"
-    bot.send_message(
-        chat_id=message.chat.id,
-        text=text_message,
-        parse_mode='markdown'
-    )
+    try:
+        telegram_id = message.from_user.id
+        webdav_info = WebDAV().get_webdav_info(str(telegram_id))
+        text_message = f"*Название календаря:* `{webdav_info['name']}`\n"\
+                        f"*URL календаря:* {webdav_info['url']}\n\n*Информация для подключения к серверу:*\n\n"\
+                        f"*Адрес:* https://webdav.fqrmix.ru\n*Логин:* `{webdav_info['login']}`\n*Пароль:* `{webdav_info['password']}`"
+        bot.send_message(
+            chat_id=message.chat.id,
+            text=text_message,
+            parse_mode='markdown'
+        )
+    except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
 
 # Subscription menu
 @bot.message_handler(commands=['subscription', 'sub'])
 def sub_menu(message):
-    telegram_id = message.from_user.id
-    sub_info = Subscription.get_sub_info(telegram_id)
-    sub_status = 'Включена' if sub_info['enabled'] else 'Отключена'
-    sub_notify_time = sub_info['time_to_notify']
-    text_message = f"Статус подписки: {sub_status}\nВремя для уведомлений: {sub_notify_time}" if sub_info['enabled'] else \
-                    f"Статус подписки: {sub_status}"
-    bot.send_message(
-        chat_id=message.chat.id, 
-        text=text_message, 
-        reply_markup=build_keyboard('main_sub')
-    )
-
-# Subscription menu callback handler
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    print(call.data)
-    if call.data == 'change_sub':
-        bot.edit_message_text(
-            chat_id = call.message.chat.id,
-            message_id = call.message.message_id,
-            text = 'Выбери действие [Включить/Отключить]', 
-            reply_markup = build_keyboard('change_sub_actions'))
-    
-    elif call.data == 'enable_sub':
-        telegram_id = call.from_user.id
-        sub_info = Subscription.get_sub_info(telegram_id)
-        if sub_info['enabled']:
-            bot.send_message(
-                chat_id=call.message.chat.id,
-                text='Подписка уже активна!'
-            )
-        else:
-            Subscription.enable(telegram_id)
-            bot.send_message(
-                chat_id=call.message.chat.id,
-                text='Подписка была успешно включена!'
-            )
-
-    elif call.data == 'disable_sub':
-        telegram_id = call.from_user.id
-        sub_info = Subscription.get_sub_info(telegram_id)
-        if not sub_info['enabled']:
-            bot.send_message(
-                chat_id=call.message.chat.id,
-                text='Подписка уже отключена!'
-            )
-        else:
-            Subscription.disable(telegram_id)
-            bot.send_message(
-                chat_id=call.message.chat.id,
-                text='Подписка была успешно отключена!'
-            )
-    
-    elif call.data == 'change_time':
-        telegram_id = call.from_user.id
-        sub_info = Subscription.get_sub_info(telegram_id)
-        if not sub_info['enabled']:
-            bot.send_message(
-                chat_id=call.message.chat.id,
-                text='Подписка отключена!'\
-                    'Необходимо ее включить для редактирования времени уведомления!'
-            )
-        else:
-            inner_message = bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text='Пришли мне время в формате XX:YY',
-                reply_markup=build_keyboard('back_to_main_keyboard')
-            )
-            bot.register_next_step_handler(inner_message, handle_change_subtime, telegram_id=telegram_id)
-
-    elif call.data == 'back_to_main':
-        bot.clear_step_handler(call.message)
-        telegram_id = call.from_user.id
+    try:
+        telegram_id = message.from_user.id
         sub_info = Subscription.get_sub_info(telegram_id)
         sub_status = 'Включена' if sub_info['enabled'] else 'Отключена'
         sub_notify_time = sub_info['time_to_notify']
         text_message = f"Статус подписки: {sub_status}\nВремя для уведомлений: {sub_notify_time}" if sub_info['enabled'] else \
                         f"Статус подписки: {sub_status}"
-        bot.edit_message_text(
-            chat_id = call.message.chat.id,
-            message_id = call.message.message_id,
-            text = text_message, 
-            reply_markup = build_keyboard('main_sub')
+        bot.send_message(
+            chat_id=message.chat.id, 
+            text=text_message, 
+            reply_markup=build_keyboard('main_sub')
         )
-    elif call.data.startswith('chatter_'):
-        telegram_id = call.data.replace('chatter_', '')
-        Chatters().add_chatter(telegram_id)
-        bot.edit_message_text(
-            chat_id = call.message.chat.id,
-            message_id = call.message.message_id,
-            text = 'Готово, сообщение для сотрудника отправлено в соответствующий чат!', 
-            reply_markup = '')
+    except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
+
+# Subscription menu callback handler
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    try:
+        if call.data == 'change_sub':
+            bot.edit_message_text(
+                chat_id = call.message.chat.id,
+                message_id = call.message.message_id,
+                text = 'Выбери действие [Включить/Отключить]', 
+                reply_markup = build_keyboard('change_sub_actions'))
+        
+        elif call.data == 'enable_sub':
+            telegram_id = call.from_user.id
+            sub_info = Subscription.get_sub_info(telegram_id)
+            if sub_info['enabled']:
+                bot.send_message(
+                    chat_id=call.message.chat.id,
+                    text='Подписка уже активна!'
+                )
+            else:
+                Subscription.enable(telegram_id)
+                bot.send_message(
+                    chat_id=call.message.chat.id,
+                    text='Подписка была успешно включена!'
+                )
+
+        elif call.data == 'disable_sub':
+            telegram_id = call.from_user.id
+            sub_info = Subscription.get_sub_info(telegram_id)
+            if not sub_info['enabled']:
+                bot.send_message(
+                    chat_id=call.message.chat.id,
+                    text='Подписка уже отключена!'
+                )
+            else:
+                Subscription.disable(telegram_id)
+                bot.send_message(
+                    chat_id=call.message.chat.id,
+                    text='Подписка была успешно отключена!'
+                )
+        
+        elif call.data == 'change_time':
+            telegram_id = call.from_user.id
+            sub_info = Subscription.get_sub_info(telegram_id)
+            if not sub_info['enabled']:
+                bot.send_message(
+                    chat_id=call.message.chat.id,
+                    text='Подписка отключена!'\
+                        'Необходимо ее включить для редактирования времени уведомления!'
+                )
+            else:
+                inner_message = bot.edit_message_text(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    text='Пришли мне время в формате XX:YY',
+                    reply_markup=build_keyboard('back_to_main_keyboard')
+                )
+                bot.register_next_step_handler(inner_message, handle_change_subtime, telegram_id=telegram_id)
+
+        elif call.data == 'back_to_main':
+            bot.clear_step_handler(call.message)
+            telegram_id = call.from_user.id
+            sub_info = Subscription.get_sub_info(telegram_id)
+            sub_status = 'Включена' if sub_info['enabled'] else 'Отключена'
+            sub_notify_time = sub_info['time_to_notify']
+            text_message = f"Статус подписки: {sub_status}\nВремя для уведомлений: {sub_notify_time}" if sub_info['enabled'] else \
+                            f"Статус подписки: {sub_status}"
+            bot.edit_message_text(
+                chat_id = call.message.chat.id,
+                message_id = call.message.message_id,
+                text = text_message, 
+                reply_markup = build_keyboard('main_sub')
+            )
+        elif call.data.startswith('chatter_'):
+            telegram_id = call.data.replace('chatter_', '')
+            today_chatters.add_chatter(telegram_id)
+            bot.edit_message_text(
+                chat_id = call.message.chat.id,
+                message_id = call.message.message_id,
+                text = 'Готово, сообщение для сотрудника отправлено в соответствующий чат!', 
+                reply_markup = '')
+            
+        elif call.data.startswith('removechatter_'):
+            telegram_id = call.data.replace('removechatter_', '')
+            today_chatters.remove_chatter(telegram_id)
+            bot.edit_message_text(
+                chat_id = call.message.chat.id,
+                message_id = call.message.message_id,
+                text = 'Готово, сообщение для сотрудника отправлено в соответствующий чат!', 
+                reply_markup = '')
+        
+    except Exception as error:
+        bot.send_message(
+            chat_id=call.message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
 
 # Loading .csv file
 @bot.message_handler(commands=['load'])
@@ -920,23 +1058,31 @@ def handle_loader(message):
         Arguments:
             *message == Object of message
     '''
-    employer_name, value = get_employer_name(
-        val = message.from_user.username,
-        parameter = "telegram",
-        my_dict = config.employers_info)
-    if employer_name is None:
+    try:
+        employer_name, value = get_employer_name(
+            val = message.from_user.username,
+            parameter = "telegram",
+            my_dict = config.employers_info)
+        if employer_name is None:
+            bot.send_message(
+                chat_id = message.chat.id,
+                text = "Данная команда предназначена только для сотрудников тех. сопровождения/подключения!")
+            error_msg = f"[load] User @{message.from_user.username} use command /load in chatID "\
+                f"- {message.chat.id}, chatName - {message.chat.title}, but he doesn't exist in employers database!"
+            raise ValueError(error_msg)
+        else:
+            logger.info(f'[load] User "{message.from_user.username}" trying to load a new CSV file')
+            link_message = bot.send_message(
+                        chat_id = message.chat.id,
+                        text = 'Пришли мне файл с графиком в формате .CSV на следующий месяц')
+            bot.register_next_step_handler(link_message, load_employers_csv)
+    except Exception as error:
         bot.send_message(
-            chat_id = message.chat.id,
-            text = "Данная команда предназначена только для сотрудников тех. сопровождения/подключения!")
-        error_msg = f"[load] User @{message.from_user.username} use command /load in chatID "\
-            f"- {message.chat.id}, chatName - {message.chat.title}, but he doesn't exist in employers database!"
-        raise ValueError(error_msg)
-    else:
-        logger.info(f'[load] User "{message.from_user.username}" trying to load a new CSV file')
-        link_message = bot.send_message(
-                    chat_id = message.chat.id,
-                    text = 'Пришли мне файл с графиком в формате .CSV на следующий месяц')
-        bot.register_next_step_handler(link_message, load_employers_csv)
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
 
 def load_employers_csv(message):
     '''
@@ -962,6 +1108,11 @@ def load_employers_csv(message):
             next_month = current_month + 1 if current_month != 12 else 1
             WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
         except Exception as error:
+            bot.send_message(
+                chat_id=message.chat.id,
+                text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+                parse_mode='markdown'
+            )
             logger.error(error, exc_info = True)
 
 # Get list of today employers
@@ -990,7 +1141,7 @@ def handle_workers(message):
             elif value.startswith('-'):
                 sign = '-'
                 numeric_value = value.replace('-', '')
-
+            
             if (not numeric_value.isdigit() and sign != '') or \
                 (not value.isdigit() and sign == ''):
                 err_msg = 'Only digits allowed to use after /workers command!\nUse:\n\n'\
@@ -1005,6 +1156,11 @@ def handle_workers(message):
                 if sign == '+':
                     past_day = str(datetime.date.today().day + int(numeric_value))
                     day_str = f"{past_day} числа текущего месяца будут работать:"
+                    # if int(past_day) > current_month_days:
+                    #    past_day = str(int(past_day) - current_month_days
+                    #    day_str = f"{past_day} числа следующего месяца будут работать:"
+                    # else:
+                    #    day_str = f"{past_day} числа текущего месяца будут работать:"
                 elif sign == '-':
                     past_day = str(datetime.date.today().day - int(numeric_value))
                     day_str = f"{past_day} числа текущего месяца работали:"
@@ -1014,17 +1170,51 @@ def handle_workers(message):
                 current_day_text= day_str
                 )
     except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
         logger.error(error, exc_info = True)
 
 # Send chatters list
 @bot.message_handler(commands=['chatters'])
 def handle_chatters(message):
-    Chatters().send_chatter_list(message.chat.id)
+    try:
+        today_chatters.send_chatter_list(message.chat.id)
+    except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
 
 # Add chatter to list
 @bot.message_handler(commands=['addchatter'])
 def handle_chatters(message):
-    Chatters().add_chatter_message(message)
+    try:
+        today_chatters.add_chatter_message(message)
+    except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
+
+# Add chatter to list
+@bot.message_handler(commands=['removechatter'])
+def handle_chatters(message):
+    try:
+        today_chatters.remove_chatter_message(message)
+    except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
 
 # Repeat lunch poll
 @bot.message_handler(commands=['lunch'])
@@ -1035,7 +1225,15 @@ def handle_lunch(message):
         Arguments:
             *message == Object of message
     '''
-    send_lunch_query(message.chat.id)
+    try:
+        send_lunch_query(message.chat.id)
+    except Exception as error:
+        bot.send_message(
+            chat_id=message.chat.id,
+            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
+            parse_mode='markdown'
+        )
+        logger.error(error, exc_info = True)
 
 # Out for lunch
 @bot.message_handler(commands=['out'])
@@ -1217,4 +1415,3 @@ if __name__ == '__main__':
         stop_run_continuously = run_continuously()
         bot.infinity_polling()
         stop_run_continuously.set()
-        
