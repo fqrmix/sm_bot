@@ -4,4 +4,7 @@ __pycache__
 .pylintrc
 .env
 .DS_Store
+test_src*
 *test.py
+*.pyc
+test*
