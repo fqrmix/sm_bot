@@ -60,109 +60,6 @@ Subscription().create_schedule()
 register_message_handlers(bot)
 register_callback_handlers(bot)
 
-# Loading .csv file
-@bot.message_handler(commands=['load'])
-def handle_loader(message):
-    '''
-        Telegram handler of command /load, which loading CSV file for next month.
-        _______
-        Arguments:
-            *message == Object of message
-    '''
-    try:
-        employer_name, value = Employees.get_employer_name(
-            val = message.from_user.username,
-            parameter = "telegram",
-            my_dict = config.employers_info)
-        if employer_name is None:
-            bot.send_message(
-                chat_id = message.chat.id,
-                text = "Данная команда предназначена только для"\
-                    "сотрудников тех. сопровождения/подключения!"
-            )
-            error_msg = f"[load] User @{message.from_user.username} use command /load in chatID "\
-                f"- {message.chat.id}, chatName - {message.chat.title}, but he doesn't exist in employers database!"
-            raise ValueError(error_msg)
-        else:
-            logger.info(f'[load] User "{message.from_user.username}" trying to load a new CSV file')
-            link_message = bot.send_message(
-                        chat_id = message.chat.id,
-                        text = 'Пришли мне файл с графиком в формате .CSV на следующий месяц')
-            bot.register_next_step_handler(link_message, load_employers_csv)
-    except Exception as error:
-        bot.send_message(
-            chat_id=message.chat.id,
-            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
-            parse_mode='markdown'
-        )
-        logger.error(error, exc_info = True)
-
-def load_employers_csv(message):
-    '''
-        Continiuous function of load handler.
-    '''
-    if message.content_type != 'document':
-        if message.text == "/cancel":
-            bot.send_message(message.chat.id, "Loading was canceled by user")
-            logger.info(f"[load] Loading was canceled by user @{message.from_user.username}")
-        else:
-            bot.send_message(message.chat.id, f"I am waiting for CSV file!\n"\
-                f"Not for {message.content_type}!\nUse /cancel command to quit")
-            bot.register_next_step_handler(message, load_employers_csv)
-    else:
-        try:
-            file_info = bot.get_file(message.document.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            with open(config.NEXT_MONTH_CSV_PATH, 'wb') as csv_file:
-                csv_file.write(downloaded_file)
-            bot.reply_to(message, "График на следующий месяц загружен!")
-            logger.info("[load] График на следующий месяц загружен!")
-            current_month = datetime.date.today().month
-            next_month = current_month + 1 if current_month != 12 else 1
-            WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
-        except Exception as error:
-            bot.send_message(
-                chat_id=message.chat.id,
-                text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
-                parse_mode='markdown'
-            )
-            logger.error(error, exc_info = True)
-
-
-# Out for lunch
-@bot.message_handler(commands=['out'])
-def handle_out(message):
-    '''
-        Telegram handler of command /out, which send notification about employers goes for lunch,
-        _______
-        Arguments:
-            *message == Object of message
-    '''
-    try:
-        employer_telegram_id = message.from_user.id
-        employer_name, value = Employees.get_employer_name(
-            val = str(employer_telegram_id),
-            parameter = 'telegram_id',
-            my_dict = config.employers_info)
-        if employer_name is None:
-            bot.send_message(
-                chat_id = message.chat.id,
-                text = "Данная команда предназначена только для"\
-                    "сотрудников тех. сопровождения/подключения!"
-            )
-            error_msg = f"[out] User @{message.from_user.username} use command /out in chatID - {message.chat.id}, "\
-                f"chatName - {message.chat.title}, but he doesn't exist in employers database!"
-            raise ValueError(error_msg)
-        bot.send_message(
-            chat_id = message.chat.id,
-            parse_mode = "Markdown",
-            text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел(-ла) на обед."\
-                f"\nКоллеги, подмените пожалуйста его в чатах.")
-        logger.info(f"[out] User @{message.from_user.username} successfully use command /out in "\
-            f"chatID - {message.chat.id}, chatName - {message.chat.title}")
-    except Exception as error:
-        logger.error(error, exc_info = True)
-
 
 ########################
 ####### Sсhedule #######
@@ -195,6 +92,39 @@ def run_continuously(interval=1):
 current_day = str(datetime.date.today().day)
 current_week_day = datetime.date.today().isoweekday()
 
+# Send today employers message to SM/POISK chat groups
+TODAY_EMPOYERS_TIME = "08:00"
+schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
+    today_workers.send_message, 
+    chat_id=config.GROUP_CHAT_ID_SM
+)
+schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
+    today_workers.send_message, 
+    chat_id=config.GROUP_CHAT_ID_POISK,
+)
+
+# Send chatters list message to SM/POISK chat groups
+TODAY_CHATTERS_TIME = "08:30"
+if current_week_day in range(1,6):
+    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+        today_chatters.send_chatter_list, 
+        chat_id=config.GROUP_CHAT_ID_SM,
+    )
+    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+        today_chatters.send_chatter_list, 
+        chat_id=config.GROUP_CHAT_ID_POISK,
+    )
+
+# Send today lunch-poll message to SM/POISK chat groups
+TODAY_LUNCH_TIME = "10:00"
+schedule.every().day.at(TODAY_LUNCH_TIME).do(
+    send_lunch_query,
+    chat_id=config.GROUP_CHAT_ID_SM
+)
+schedule.every().day.at(TODAY_LUNCH_TIME).do(
+    send_lunch_query, 
+    chat_id=config.GROUP_CHAT_ID_POISK
+)
 
 ############################
 ## Start infinity polling ##

@@ -6,7 +6,7 @@ class Employees:
     def __init__(self, next_month=False) -> None:
         try:
             if not next_month:
-                employees_list = self.get_employer_list(config.CSV_PATH_TEST)
+                employees_list = self.get_employer_list(config.CSV_PATH)
             else:
                 employees_list = self.get_employer_list(config.NEXT_MONTH_CSV_PATH)
             logger.info(msg="[employees] Shift employees list was dumped from CSV")
@@ -42,13 +42,13 @@ class Employees:
                     'name': '',
                     'shifts': {}
                 }
-            logger.info(msg=f"[employees] In-self class lists was created."\
+            logger.info(msg=f"[employees] In-self class lists was created. "\
                 f"Scope: {self.employees}\n{self.fulltime_employees}")
         except Exception as error:
             logger.error(error, exc_info=True)
     
     def add_dayoff(self, dayoff_info: dict):
-        employees = self.get_employer_list(config.CSV_PATH_TEST)
+        employees = self.get_employer_list(config.CSV_PATH)
         fieldnames = []
         for employee in employees:
             for current_obj in employee:
@@ -57,7 +57,7 @@ class Employees:
                         if item.isdigit() and int(item) in range(dayoff_info['start'], dayoff_info['end'] + 1):
                             employee[item] = 'DO'
                         fieldnames.append(item)
-        self.save_employees_list(path=config.CSV_PATH_TEST, employees=employees, workers_fieldnames=fieldnames)
+        self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
 
 
     @staticmethod

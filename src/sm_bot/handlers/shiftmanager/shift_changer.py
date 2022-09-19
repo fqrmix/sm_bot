@@ -74,7 +74,7 @@ class ShiftChanger(Employees):
                     main_menu_button_list.append(current_button)
         return main_menu_button_list
 
-telegram_token = '5316952420:AAHpY4Jp43C0DrK0uQNHvomDZ9XhDW3aLBU'
+telegram_token = ''
 
 shiftchanger = {0: ShiftChanger}
 
