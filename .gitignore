@@ -1,10 +1,17 @@
-sm_bot_venv
-sm_bot_env
+# Cache
 __pycache__
-.pylintrc
-.env
+*.pyc
 .DS_Store
+
+# IDE
+.pylintrc
 test_src*
 *test.py
-*.pyc
 test*
+
+# Env files
+sm_bot_venv
+sm_bot_env
+employers*.csv
+employers*.json
+.env

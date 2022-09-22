@@ -32,7 +32,8 @@ class DayWorkers(Employees):
 
         for current_employer in self.employees:
             if current_employer['shifts'][self.current_day] != '' \
-            and current_employer['shifts'][self.current_day] != 'ОТ':
+            and current_employer['shifts'][self.current_day] != 'ОТ'\
+            and current_employer['shifts'][self.current_day] != 'DO':
                 actual_employee = self.create_actual_employee(
                     current_employer, 
                     self.current_day
@@ -76,23 +77,29 @@ class DayWorkers(Employees):
     def send_message(self, chat_id, current_day_text='Сегодня работают:') -> str:
         try:
             shopmasters_list, poisk_list, others_list = self.split_by_group()
+
             current_day_sm = self.create_str(shopmasters_list) 
             current_day_sm_text = f'*Шопмастера:*\n{current_day_sm}'\
                 if shopmasters_list != [] else ''
+
             current_day_poisk = self.create_str(poisk_list)
             current_day_poisk_text = f'*Поиск:*\n{current_day_poisk}'\
                 if poisk_list != [] else ''
+
             current_day_others = self.create_str(others_list)
             current_day_others_text = f'*CMS/LK:*\n{current_day_others}'\
                 if others_list != [] else ''
+
             text_message = f'*{current_day_text}*\n\n{current_day_sm_text}\n'\
                             f'{current_day_poisk_text}\n'\
                             f'{current_day_others_text}'
+            
             bot_message = bot.send_message(
                 chat_id = chat_id,
                 parse_mode = 'Markdown',
                 text = text_message
             )
+
             logger.info(msg=f"[day-workers] Workers message was successfully send to chatID: {chat_id}")
             if current_day_text == 'Сегодня работают:':
                 bot.pin_chat_message(
@@ -102,6 +109,9 @@ class DayWorkers(Employees):
                 logger.info(msg=f"[day-workers] Workers message was successfully pinned to chatID: {chat_id}")
         except Exception as error:
             logger.error(error, exc_info = True)
+    
+    def _update(self) -> None:
+        self.__init__()
 
     """
     Workers class static methods

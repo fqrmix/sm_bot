@@ -1,3 +1,4 @@
+from sm_bot.handlers.workersmanager import today_workers
 from sm_bot.handlers.workersmanager.employees import Employees
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import sm_bot.config.config as config
@@ -8,25 +9,31 @@ class ShiftChanger(Employees):
     def __init__(self) -> None:
         super().__init__()
         self.employees_info = config.employers_info
-        self.dayoff_list = []
         self.dayoff = {
             'name': str,
             'telegram_id': str,
             'start': int,
             'end': int
         }
+        self.shift = {
+            'name': str,
+            'telegram_id': str,
+            'day': int,
+            'type': int
+        }
         
 
-    def build_keyboard(self, keyboard_type, telegram_id, dayoff_start=None):
+    def build_keyboard(self, keyboard_type: str, telegram_id: str, dayoff_start=None):
         if keyboard_type == 'main_dayoff':
             keyboard = InlineKeyboardMarkup(row_width = 2)
-            main_menu_button_list = self.create_button_list(telegram_id=telegram_id)
+            main_menu_button_list = self.create_buttons(telegram_id=telegram_id)
             keyboard.add(*main_menu_button_list)
             return keyboard
+        
         if keyboard_type == 'dayoff_start':
             try:
                 keyboard = InlineKeyboardMarkup(row_width = 2)
-                main_menu_button_list = self.create_button_list(
+                main_menu_button_list = self.create_buttons(
                     telegram_id=telegram_id, 
                     dayoff_start=dayoff_start
                 )
@@ -35,18 +42,37 @@ class ShiftChanger(Employees):
             except Exception as e:
                 print(e)
         
-    def create_button_list(self, telegram_id, dayoff_start=None):
+        if keyboard_type == 'addshift_main':
+            keyboard = InlineKeyboardMarkup(row_width=2)
+            main_menu_button_list = self.create_buttons(
+                telegram_id=telegram_id,
+                add_shift=True
+            )
+            keyboard.add(*main_menu_button_list)
+            return keyboard
+
+        if keyboard_type == 'addshift_list':
+            keyboard = InlineKeyboardMarkup(row_width=3)
+            main_menu_button_list = self.create_shift_buttons()
+            keyboard.add(*main_menu_button_list)
+            return keyboard
+
+
+    def create_buttons(self, telegram_id: str, dayoff_start=None, add_shift=False) -> list:
         text = ''
         start = ''
         end = ''
         callback_data = ''
         main_menu_button_list = []
-        name, info = Employees.get_employer_name(
+        name, info = self.get_employer_name(
                 val=str(telegram_id),
                 parameter='telegram_id',
                 my_dict=self.employees_info
             )
-        self.dayoff['name'] = name
+        if not add_shift:
+            self.dayoff['name'] = name
+        else:
+            self.shift['name'] = name
         for employee in self.employees:
             if employee['name'] == name:
                 for current_day in employee['shifts']:
@@ -67,67 +93,55 @@ class ShiftChanger(Employees):
                             text += '\n[Начало]'
                         callback_data = f'dayoff_end_{current_day}'
                     else:
-                        callback_data = f'dayoff_start_{current_day}'
+                        if not add_shift:
+                            callback_data = f'dayoff_start_{current_day}'
+                        else:
+                            callback_data = f'addshift_{current_day}'
                     current_button = InlineKeyboardButton(
                             text=text, 
                             callback_data=callback_data)
+                    print(f"{current_button.text} | {current_button.callback_data}")
                     main_menu_button_list.append(current_button)
         return main_menu_button_list
-
-telegram_token = '5316952420:AAHpY4Jp43C0DrK0uQNHvomDZ9XhDW3aLBU'
-
-shiftchanger = {0: ShiftChanger}
-
-@bot.message_handler(commands=['dayoff'])
-def send_first_dayoff_message(message):
-    shiftchanger[str(message.from_user.id)] = ShiftChanger()
-    bot.send_message(
-            chat_id=message.chat.id, 
-            text='Выбери день начала отсутствия', 
-            reply_markup=shiftchanger[str(message.from_user.id)].build_keyboard(
-                keyboard_type='main_dayoff', 
-                telegram_id=message.from_user.id
+    
+    def create_shift_buttons(self) -> list:
+        main_menu_button_list = []
+        text: str
+        for type in config.working_shift:
+            text = f"{config.working_shift[type]['start']} - {config.working_shift[type]['end']}"
+            current_button = InlineKeyboardButton(
+                text=text,
+                callback_data=f"addshift_type_{type}"
             )
-        )
+            main_menu_button_list.append(current_button)
+        return main_menu_button_list
+        
+    def add_dayoff(self) -> None:
+        employees = self.get_employer_list(config.CSV_PATH)
+        fieldnames = []
+        print(self.dayoff['start'], self.dayoff['end'])
+        if self.dayoff['start'] > self.dayoff['end']:
+            self.dayoff['start'], self.dayoff['end'] = self.dayoff['end'], self.dayoff['start']
+        print(self.dayoff['start'], self.dayoff['end'])
+        for employee in employees:
+            for current_obj in employee:
+                if employee[current_obj] == self.dayoff['name']:
+                    for item in employee:
+                        if item.isdigit() and int(item) in range(self.dayoff['start'], self.dayoff['end'] + 1):
+                            employee[item] = 'DO'
+                        fieldnames.append(item)
+        self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
+        today_workers._update()
 
-
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    try:
-        if call.data.startswith('dayoff_start_'):
-            telegram_id = str(call.from_user.id)
-            dayoff_start = call.data.replace('dayoff_start_', '')
-            shiftchanger[telegram_id].dayoff['telegram_id'] = telegram_id
-            shiftchanger[telegram_id].dayoff['start'] = int(dayoff_start)
-
-            inner_message = bot.edit_message_text(
-                        chat_id=call.message.chat.id,
-                        message_id=call.message.message_id,
-                        text='Выбери день окончания отсутствия',
-                        reply_markup=shiftchanger[telegram_id].build_keyboard(
-                            keyboard_type='dayoff_start', 
-                            telegram_id=telegram_id, 
-                            dayoff_start=dayoff_start
-                        )
-                    )
-        elif call.data.startswith('dayoff_end_'):
-            telegram_id = str(call.from_user.id)
-            dayoff_end = call.data.replace('dayoff_end_', '')
-            shiftchanger[telegram_id].dayoff['end'] = int(dayoff_end)
-            if shiftchanger[telegram_id].dayoff['start'] == shiftchanger[telegram_id].dayoff['end']:
-                dayoff_text = f"на {shiftchanger[telegram_id].dayoff['end']} число текущего месяца"
-            else:
-                dayoff_text = f"с {shiftchanger[telegram_id].dayoff['start']} числа по "\
-                    f"{shiftchanger[telegram_id].dayoff['end']} число текущего месяца"
-            inner_message = bot.edit_message_text(
-                        chat_id=call.message.chat.id,
-                        message_id=call.message.message_id,
-                        text=f"Ты, {shiftchanger[telegram_id].dayoff['name']}, "\
-                            f"добавил отсутствие {dayoff_text}",
-                        reply_markup=None
-                    )
-            shiftchanger[telegram_id].add_dayoff(shiftchanger[telegram_id].dayoff)
-    except Exception as e:
-        print(e)
-
-bot.infinity_polling(skip_pending = True)
+    def add_shift(self) -> None:
+        employees = self.get_employer_list(config.CSV_PATH)
+        fieldnames = []
+        for employee in employees:
+            for current_obj in employee:
+                if employee[current_obj] == self.shift['name']:
+                    for item in employee:
+                        if item.isdigit() and int(item) == self.shift['day']:
+                            employee[item] = self.shift['type']
+                        fieldnames.append(item)
+        self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
+        today_workers._update()

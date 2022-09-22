@@ -182,8 +182,8 @@ class Subscription:
         if keyboard_type == 'main_sub':
             keyboard = InlineKeyboardMarkup(row_width = 1)
             main_menu_button_list = [
-                InlineKeyboardButton(text = 'Изменить время уведомления', callback_data = 'change_time'),
-                InlineKeyboardButton(text = 'Изменить параметры подписки', callback_data = 'change_sub'),
+                InlineKeyboardButton(text = 'Изменить время уведомления', callback_data = 'sub_change_time'),
+                InlineKeyboardButton(text = 'Изменить параметры подписки', callback_data = 'sub_change_status'),
                 InlineKeyboardButton(text = '<< Отмена', callback_data = 'cancel')
             ]
             keyboard.add(*main_menu_button_list)
@@ -192,14 +192,14 @@ class Subscription:
         if keyboard_type == 'change_sub_actions':
             keyboard = InlineKeyboardMarkup(row_width = 1)
             main_menu_button_list = [
-                InlineKeyboardButton(text = 'Включить подписку', callback_data = 'enable_sub'),
-                InlineKeyboardButton(text = 'Отключить подписку', callback_data = 'disable_sub'),
-                InlineKeyboardButton(text = '<< Назад', callback_data = 'back_to_main')
+                InlineKeyboardButton(text = 'Включить подписку', callback_data = 'sub_enable'),
+                InlineKeyboardButton(text = 'Отключить подписку', callback_data = 'sub_disable'),
+                InlineKeyboardButton(text = '<< Назад', callback_data = 'sub_back_to_main')
             ]
             keyboard.add(*main_menu_button_list)
             return keyboard
         
         if keyboard_type == 'back_to_main_keyboard':
             keyboard = InlineKeyboardMarkup(row_width = 1)
-            keyboard.add(InlineKeyboardButton(text = '<< Назад', callback_data = 'back_to_main'))
+            keyboard.add(InlineKeyboardButton(text = '<< Назад', callback_data = 'sub_back_to_main'))
             return keyboard

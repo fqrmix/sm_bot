@@ -6,7 +6,7 @@ class Employees:
     def __init__(self, next_month=False) -> None:
         try:
             if not next_month:
-                employees_list = self.get_employer_list(config.CSV_PATH_TEST)
+                employees_list = self.get_employer_list(config.CSV_PATH)
             else:
                 employees_list = self.get_employer_list(config.NEXT_MONTH_CSV_PATH)
             logger.info(msg="[employees] Shift employees list was dumped from CSV")
@@ -46,19 +46,6 @@ class Employees:
                 f"Scope: {self.employees}\n{self.fulltime_employees}")
         except Exception as error:
             logger.error(error, exc_info=True)
-    
-    def add_dayoff(self, dayoff_info: dict):
-        employees = self.get_employer_list(config.CSV_PATH_TEST)
-        fieldnames = []
-        for employee in employees:
-            for current_obj in employee:
-                if employee[current_obj] == dayoff_info['name']:
-                    for item in employee:
-                        if item.isdigit() and int(item) in range(dayoff_info['start'], dayoff_info['end'] + 1):
-                            employee[item] = 'DO'
-                        fieldnames.append(item)
-        self.save_employees_list(path=config.CSV_PATH_TEST, employees=employees, workers_fieldnames=fieldnames)
-
 
     @staticmethod
     def get_employer_list(path):

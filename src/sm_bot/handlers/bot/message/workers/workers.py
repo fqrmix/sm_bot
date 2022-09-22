@@ -43,11 +43,6 @@ def handle_workers(message: types.Message, bot: TeleBot):
                 if sign == '+':
                     past_day = str(datetime.date.today().day + int(numeric_value))
                     day_str = f"{past_day} числа текущего месяца будут работать:"
-                    # if int(past_day) > current_month_days:
-                    #    past_day = str(int(past_day) - current_month_days
-                    #    day_str = f"{past_day} числа следующего месяца будут работать:"
-                    # else:
-                    #    day_str = f"{past_day} числа текущего месяца будут работать:"
                 elif sign == '-':
                     past_day = str(datetime.date.today().day - int(numeric_value))
                     day_str = f"{past_day} числа текущего месяца работали:"

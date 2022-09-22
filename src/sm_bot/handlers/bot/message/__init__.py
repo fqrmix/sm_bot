@@ -1,9 +1,10 @@
 from telebot import TeleBot
 from sm_bot.handlers.bot.message.base import *
-from sm_bot.handlers.bot.message.subscription.subscription import handle_sub_menu
+from sm_bot.handlers.bot.message.subscription.subscription import *
 from sm_bot.handlers.bot.message.webdav import *
 from sm_bot.handlers.bot.message.workers import *
 from sm_bot.handlers.bot.message.chatters import *
+from sm_bot.handlers.bot.message.shifts import *
 
 def register_message_handlers(bot: TeleBot):
     bot.register_message_handler(init_bot, commands=['init'], pass_bot=True)
@@ -21,6 +22,10 @@ def register_message_handlers(bot: TeleBot):
 
     # Sub
     bot.register_message_handler(handle_sub_menu, commands=['sub'], pass_bot=True)
+
+    # Shift changer
+    bot.register_message_handler(handle_dayoff_message, commands=['dayoff'], pass_bot=True)
+    bot.register_message_handler(handle_addshift_message, commands=['addshift'], pass_bot=True)
 
     # Auto-out for lunch
     bot.register_poll_answer_handler(handle_poll_answer, func=lambda call: True, pass_bot=True)

@@ -5,14 +5,14 @@ from sm_bot.services.logger import logger
 # Subscription menu callback handler
 def handle_sub_callback(call: types.CallbackQuery, bot: TeleBot):
     try:
-        if call.data == 'change_sub':
+        if call.data == 'sub_change_status':
             bot.edit_message_text(
                 chat_id = call.message.chat.id,
                 message_id = call.message.message_id,
                 text = 'Выбери действие [Включить/Отключить]', 
                 reply_markup = Subscription.build_keyboard('change_sub_actions'))
         
-        elif call.data == 'enable_sub':
+        elif call.data == 'sub_enable':
             telegram_id = call.from_user.id
             sub_info = Subscription.get_sub_info(telegram_id)
             if sub_info['enabled']:
@@ -27,7 +27,7 @@ def handle_sub_callback(call: types.CallbackQuery, bot: TeleBot):
                     text='Подписка была успешно включена!'
                 )
 
-        elif call.data == 'disable_sub':
+        elif call.data == 'sub_disable':
             telegram_id = call.from_user.id
             sub_info = Subscription.get_sub_info(telegram_id)
             if not sub_info['enabled']:
@@ -42,7 +42,7 @@ def handle_sub_callback(call: types.CallbackQuery, bot: TeleBot):
                     text='Подписка была успешно отключена!'
                 )
         
-        elif call.data == 'change_time':
+        elif call.data == 'sub_change_time':
             telegram_id = call.from_user.id
             sub_info = Subscription.get_sub_info(telegram_id)
             if not sub_info['enabled']:
@@ -60,7 +60,7 @@ def handle_sub_callback(call: types.CallbackQuery, bot: TeleBot):
                 )
                 bot.register_next_step_handler(inner_message, Subscription.handle_change_subtime, telegram_id=telegram_id)
 
-        elif call.data == 'back_to_main':
+        elif call.data == 'sub_back_to_main':
             bot.clear_step_handler(call.message)
             telegram_id = call.from_user.id
             sub_info = Subscription.get_sub_info(telegram_id)
