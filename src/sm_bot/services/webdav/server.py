@@ -1,5 +1,6 @@
 from sm_bot.config import config
 from sm_bot.services.logger import logger
+from sm_bot.services.webdav import Client
 import csv
 
 class WebDAV:

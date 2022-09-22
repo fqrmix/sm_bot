@@ -8,8 +8,9 @@ from sm_bot.config import config
 from sm_bot.services.bot import bot
 from sm_bot.services.logger import logger, trace_logger
 from sm_bot.services.subscription import Subscription
-from sm_bot.handlers.workersmanager.employees import Employees
-
+from sm_bot.handlers.workersmanager import today_workers
+from sm_bot.handlers.chattersmanager import today_chatters
+from sm_bot.handlers.bot.message.base import send_lunch_query
 from sm_bot.handlers.bot.message import register_message_handlers
 from sm_bot.handlers.bot.callback import register_callback_handlers
 
@@ -43,8 +44,8 @@ def update_actual_csv(nextpath, path):
 ###########################
 
 logger_data = {
-            'trace_id': uuid.uuid4()
-        }
+    'trace_id': uuid.uuid4()
+}
 
 current_date = datetime.date.today()
 if current_date.day == 1:

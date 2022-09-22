@@ -1,7 +1,7 @@
 from telebot import TeleBot
-from sm_bot.handlers.bot.callback.subscription import *
 from sm_bot.handlers.bot.callback.shifts import *
 from sm_bot.handlers.bot.callback.chatters import *
+from sm_bot.handlers.bot.callback.subscription import *
 
 
 def register_callback_handlers(bot: TeleBot):
