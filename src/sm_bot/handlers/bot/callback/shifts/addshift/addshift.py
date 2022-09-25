@@ -3,7 +3,6 @@ from sm_bot.services.logger import logger
 from telebot import types, TeleBot
 
 def handle_addshift_callback(call: types.CallbackQuery, bot: TeleBot):
-    print(call.data)
     try:
         if call.data.startswith('addshift_type_'):
             telegram_id = str(call.from_user.id)

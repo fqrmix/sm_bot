@@ -100,7 +100,6 @@ class ShiftChanger(Employees):
                     current_button = InlineKeyboardButton(
                             text=text, 
                             callback_data=callback_data)
-                    print(f"{current_button.text} | {current_button.callback_data}")
                     main_menu_button_list.append(current_button)
         return main_menu_button_list
     
@@ -119,10 +118,8 @@ class ShiftChanger(Employees):
     def add_dayoff(self) -> None:
         employees = self.get_employer_list(config.CSV_PATH)
         fieldnames = []
-        print(self.dayoff['start'], self.dayoff['end'])
         if self.dayoff['start'] > self.dayoff['end']:
             self.dayoff['start'], self.dayoff['end'] = self.dayoff['end'], self.dayoff['start']
-        print(self.dayoff['start'], self.dayoff['end'])
         for employee in employees:
             for current_obj in employee:
                 if employee[current_obj] == self.dayoff['name']:
