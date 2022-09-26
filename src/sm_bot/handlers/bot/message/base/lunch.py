@@ -44,7 +44,7 @@ class LunchQuery:
         return buttons_list
 
     def build_keyboard(self) -> InlineKeyboardMarkup:
-            keyboard = InlineKeyboardMarkup(row_width = 2)
+            keyboard = InlineKeyboardMarkup(row_width = 1)
             buttons_list = self.create_buttons()
             keyboard.add(*buttons_list)
             return keyboard
