@@ -38,20 +38,59 @@ Also it can be used that way:
 
 ## Project architecture
 ```
-├── csv
-│   ├── employers_5_2.csv     [#] Employer's schedule for next month
-│   ├── employers.csv         [#] Employer's schedule for current month
-│   └── employers-next.csv    [#] Employer's schedule for 5/2
-├── json
-│   ├── employers_info.json   [#] List of employers and info
-│   ├── employers_month.json  [#] List of month names on Russian language
-│   └── employers_shift.json  [#] Work shift parameters
-│
-├── config.py                 [#] Configuration file
-├── main.py                   [#] Main file
-├── README.md
-├── requirements.txt          [#] Requirements for using
-└── telegram-bot.log          [#] Logger
+|-- logs                                            [#] Log folder
+|   `-- telegram-bot.log
+|-- src
+|   |-- sm_bot
+|   |   |-- config                                  [#] Configuration module
+|   |   |   `-- config.py
+|   |   |-- data
+|   |   |   |-- csv
+|   |   |   |   |-- employers_5_2.csv               [#] Employer's schedule for next month
+|   |   |   |   |-- employers.csv                   [#] Employer's schedule for current month
+|   |   |   |   `-- employers-next.csv              [#] Employer's schedule for 5/2
+|   |   |   `-- json
+|   |   |       |-- employers_info.json             [#] List of employers and info
+|   |   |       |-- employers_month.json            [#] List of month names on Russian language
+|   |   |       `-- employers_shift.json            [#] Work shift parameters      
+|   |   |-- handlers
+|   |   |   |-- bot
+|   |   |   |   |-- callback
+|   |   |   |   |   |-- chatters
+|   |   |   |   |   |   `-- chatters.py
+|   |   |   |   |   `-- subscription
+|   |   |   |   |       `-- subscription.py
+|   |   |   |   `-- message
+|   |   |   |       |-- base
+|   |   |   |       |   |-- botinit.py
+|   |   |   |       |   |-- log.py
+|   |   |   |       |   `-- lunch.py
+|   |   |   |       |-- chatters
+|   |   |   |       |   `-- chatters.py
+|   |   |   |       |-- subscription
+|   |   |   |       |   `-- subscription.py
+|   |   |   |       |-- webdav
+|   |   |   |       |   `-- menu.py
+|   |   |   |       `-- workers
+|   |   |   |           `-- workers.py
+|   |   |   |-- chattersmanager
+|   |   |   |   `-- chatters.py
+|   |   |   |-- shiftmanager
+|   |   |   |   `-- shift_changer.py
+|   |   |   `-- workersmanager
+|   |   |       |-- day_workers.py
+|   |   |       `-- employees.py
+|   |   `-- services
+|   |       |-- webdav
+|   |       |   |-- client.py
+|   |       |   `-- server.py
+|   |       |-- bot.py
+|   |       |-- logger.py
+|   |       `-- subscription.py
+|   `-- main.py                                     [#] Main file
+|-- android_instruction.md
+|-- README.md
+`-- requirements.txt                                [#] Requirements for using
 ```
 
 ## CSV architecture
