@@ -44,7 +44,7 @@ def handle_remove_chatters(message: types.Message, bot: TeleBot):
         logger.error(error, exc_info = True)
 
 # Chatter list job
-def chatter_list_job(employer_telegram_id, bot: TeleBot):
+def chatter_list_job(employer_telegram_id, bot: TeleBot) -> schedule.CancelJob:
     try:
         chat_id = None
         employer_name, employer_info = Employees.get_employer_name(
@@ -71,44 +71,50 @@ def chatter_list_job(employer_telegram_id, bot: TeleBot):
         logger.error(error, exc_info = True)
 
 # Auto-out for lunch
-def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot):
+def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
     print(pollAnswer)
     if len(pollAnswer.option_ids) == 0:
         for employee in lunchquery.lunch_list:
-            if employee['name'] == pollAnswer.user.username:
+            if employee['id'] == pollAnswer.user.id:
                 lunchquery.lunch_list.pop(lunchquery.lunch_list.index(employee))
                 lunchquery.update_markup(bot)
     else:
         lunch_time = get_lunch_time(pollAnswer.option_ids[0])
         logger.info(f'[poll-answer-handler] User {pollAnswer.user.id} has choosen {lunch_time} time for lunch')
         lunch_employee = {
+            'id': str,
             'name': str,
             'lunch_time': str
         }
-        lunch_employee['name'] = pollAnswer.user.username
+        employer_name, employer_info = Employees.get_employer_name(
+            val=str(pollAnswer.user.id),
+            parameter='telegram_id', 
+            my_dict=config.employers_info
+        )
+        lunch_employee['id'] = pollAnswer.user.id
+        lunch_employee['name'] = employer_name
         lunch_employee['lunch_time'] = lunch_time
         lunchquery.lunch_list.append(lunch_employee)
         lunchquery.update_markup(bot)
-            
         try:
             schedule_time = get_schedule_time(pollAnswer.option_ids[0])
             for current_chatter in today_chatters.chatter_list:
                 if current_chatter['telegram_id'] == str(pollAnswer.user.id):
-                    logger.info(f"[poll-answer-handler] User {pollAnswer.user.id} was found in chatter list\n"\
+                    logger.info(f"[poll-answer-handler] User [{employer_name} | ID: {pollAnswer.user.id}] was found in chatter list\n"\
                         f"Subject: {today_chatters.chatter_list}")
                     if current_chatter['chat']['scheduled']:
-                        logger.info(f'[poll-answer-handler] Schedule for user {pollAnswer.user.id} was already created')
+                        logger.info(f'[poll-answer-handler] Schedule for user [{employer_name} | ID: {pollAnswer.user.id}] was already created')
                         schedule.clear(str(pollAnswer.user.id))
-                        logger.info(f'[poll-answer-handler] Previous schedule for user {pollAnswer.user.id} was removed')
+                        logger.info(f'[poll-answer-handler] Previous schedule for user [{employer_name} | ID: {pollAnswer.user.id}] was removed')
                     schedule.every().day.at(schedule_time).do(
                         chatter_list_job,
                         bot = bot,
                         employer_telegram_id = pollAnswer.user.id
                     ).tag(str(pollAnswer.user.id))
-                    logger.info(f'[poll-answer-handler] Schedule for lunch-out was created for user {pollAnswer.user.id}')
+                    logger.info(f'[poll-answer-handler] Schedule for lunch-out was created for user [{employer_name} | ID: {pollAnswer.user.id}]')
                     current_chatter['chat']['lunch_time'] = lunch_time
                     current_chatter['chat']['scheduled'] = True
-                    logger.info(f"[poll-answer-handler] User {pollAnswer.user.id} "\
+                    logger.info(f"[poll-answer-handler] User [{employer_name} | ID: {pollAnswer.user.id}] "\
                         f"lunch time: {current_chatter['chat']['lunch_time']}, "\
                         f"schedule status: {current_chatter['chat']['scheduled']}")
         except Exception as error:

@@ -8,7 +8,7 @@ class LunchQuery:
         self.lunch_list = list()
 
     # Send lunch poll
-    def send_lunch_query(self, chat_id, bot: TeleBot):
+    def send_lunch_query(self, chat_id, bot: TeleBot) -> None:
         '''
             Function that send lunch poll to Telegram Chat.
             _______
@@ -26,7 +26,7 @@ class LunchQuery:
         except Exception as error:
             logger.error(error, exc_info = True)
     
-    def update_markup(self, bot: TeleBot):
+    def update_markup(self, bot: TeleBot) -> None:
         for message in self.messages:
             bot.edit_message_reply_markup(
                     chat_id=message['chat']['id'],
@@ -39,7 +39,7 @@ class LunchQuery:
         for obj in self.lunch_list:
             current_button = InlineKeyboardButton(
                 text=f"{obj['name']} | {obj['lunch_time']}", 
-                callback_data='test')
+                callback_data='lunch_query')
             buttons_list.append(current_button)
         return buttons_list
 
@@ -52,7 +52,7 @@ class LunchQuery:
 lunchquery = LunchQuery()
 
 # Repeat lunch poll
-def handle_lunch(message: types.Message, bot: TeleBot):
+def handle_lunch(message: types.Message, bot: TeleBot) -> None:
     '''
         Telegram handler of command /lunch, which loading CSV file for next month.
         _______

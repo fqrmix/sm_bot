@@ -2,7 +2,7 @@ from sm_bot.handlers.shiftmanager import *
 from sm_bot.services.logger import logger
 from telebot import types, TeleBot
 
-def handle_swapshift_message(message: types.Message, bot: TeleBot):
+def handle_swapshift_message(message: types.Message, bot: TeleBot) -> None:
     shiftswapper[str(message.from_user.id)] = ShiftSwapper()
     bot.send_message(
             chat_id=message.chat.id, 

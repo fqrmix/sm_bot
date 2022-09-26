@@ -5,19 +5,19 @@ from sm_bot.services.logger import logger
 from telebot import types
 from schedule import clear
 
-def get_lunch_time(option_id):
+def get_lunch_time(option_id: int) -> str:
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
     return options[option_id]
 
 
-def get_notification_time(str):
+def get_notification_time(str: str) -> str:
     new_str = str.split(':')
     time_hour = int(new_str[0]) - 1
     time_minutes = int(new_str[1]) + 55
     return f'{time_hour}:{time_minutes}'
 
 
-def get_schedule_time(option_id):
+def get_schedule_time(option_id: int) -> str:
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
     lunch_time = options[option_id]
     return get_notification_time(lunch_time)
@@ -43,7 +43,7 @@ class Chatters(DayWorkers):
         for chatter in self.chatter_list:
             print(chatter)
     
-    def create_chatters_str(self):
+    def create_chatters_str(self) -> str:
         try:
             text_message = ''
             for current_chatter in self.chatter_list:
@@ -57,7 +57,7 @@ class Chatters(DayWorkers):
         except Exception as error:
             logger.error(error, exc_info = True)
 
-    def send_chatter_list(self, chat_id):
+    def send_chatter_list(self, chat_id) -> None:
         try:
             today_chatters = self.create_chatters_str()
             text_message = f"Сегодня в чатах:\n{today_chatters}"
@@ -70,7 +70,7 @@ class Chatters(DayWorkers):
         except Exception as error:
             logger.error(error, exc_info = True)
     
-    def build_chatter_keyboard(self, direction: str):
+    def build_chatter_keyboard(self, direction: str) -> types.InlineKeyboardMarkup:
         try:
             chattter_menu_button_list = []
             if direction == 'in':
@@ -122,7 +122,7 @@ class Chatters(DayWorkers):
         except Exception as error:
             logger.error(error, exc_info = True)
     
-    def add_chatter(self, telegram_id):
+    def add_chatter(self, telegram_id: str) -> types.Message:
         try:
             chat_id = ''
             text_message = ''
@@ -147,7 +147,7 @@ class Chatters(DayWorkers):
         except Exception as error:
             logger.error(error, exc_info = True)
 
-    def remove_chatter_message(self, message):
+    def remove_chatter_message(self, message: types.Message) -> None:
         try:
             logger.info(msg=f"[chatters] User {message.from_user.username} trying to remove chatter")
             today_chatters = self.create_chatters_str()
@@ -163,7 +163,7 @@ class Chatters(DayWorkers):
         except Exception as error:
             logger.error(error, exc_info = True)
     
-    def remove_chatter(self, telegram_id):
+    def remove_chatter(self, telegram_id: str) -> types.Message:
         try:
             chat_id = ''
             text_message = ''
