@@ -52,7 +52,7 @@ class DayWorkers(Employees):
                         'Any'
                         )
                     self.workers_list.append(actual_employee)
-        logger.info(msg=f"[day-workers] DayWorkers class was initilated. Scope: {self.workers_list}")
+        logger.info(msg=f"[day-workers] DayWorkers class was initilated.")
 
     def split_by_group(self) -> list:
         try:

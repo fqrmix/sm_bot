@@ -60,11 +60,11 @@ class ShiftSwapper(Employees):
             return buttons_list
 
         elif keyboard_type == 'shiftswap_assistant':
-            for employee in self.employees_info:
-                if employee != self.shiftswap['user_name']:
-                    user_callback_data = f"shiftswap_assistant_id_{self.employees_info[employee]['telegram_id']}"
+            for employee in self.employees:
+                if employee['name'] != self.shiftswap['user_name']:
+                    user_callback_data = f"shiftswap_assistant_id_{self.employees_info[employee['name']]['telegram_id']}"
                     current_button = InlineKeyboardButton(
-                            text=employee, 
+                            text=employee['name'], 
                             callback_data=user_callback_data)
                     buttons_list.append(current_button)
             return buttons_list

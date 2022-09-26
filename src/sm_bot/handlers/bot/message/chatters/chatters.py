@@ -1,5 +1,7 @@
+from sm_bot.handlers.bot.message.base import lunch
 from sm_bot.handlers.chattersmanager import *
 from sm_bot.handlers.workersmanager.employees import Employees
+from sm_bot.handlers.bot.message.base import *
 from sm_bot.services.logger import logger
 from sm_bot.config import config
 from telebot import types, TeleBot
@@ -70,10 +72,26 @@ def chatter_list_job(employer_telegram_id, bot: TeleBot):
 
 # Auto-out for lunch
 def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot):
-    if len(pollAnswer.option_ids) > 0:
+    print(pollAnswer)
+    if len(pollAnswer.option_ids) == 0:
+        for employee in lunchquery.lunch_list:
+            if employee['name'] == pollAnswer.user.username:
+                lunchquery.lunch_list.pop(lunchquery.lunch_list.index(employee))
+                lunchquery.update_markup(bot)
+    else:
         lunch_time = get_lunch_time(pollAnswer.option_ids[0])
         logger.info(f'[poll-answer-handler] User {pollAnswer.user.id} has choosen {lunch_time} time for lunch')
+        lunch_employee = {
+            'name': str,
+            'lunch_time': str
+        }
+        lunch_employee['name'] = pollAnswer.user.username
+        lunch_employee['lunch_time'] = lunch_time
+        lunchquery.lunch_list.append(lunch_employee)
+        lunchquery.update_markup(bot)
+            
         try:
+            schedule_time = get_schedule_time(pollAnswer.option_ids[0])
             for current_chatter in today_chatters.chatter_list:
                 if current_chatter['telegram_id'] == str(pollAnswer.user.id):
                     logger.info(f"[poll-answer-handler] User {pollAnswer.user.id} was found in chatter list\n"\
@@ -82,7 +100,7 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot):
                         logger.info(f'[poll-answer-handler] Schedule for user {pollAnswer.user.id} was already created')
                         schedule.clear(str(pollAnswer.user.id))
                         logger.info(f'[poll-answer-handler] Previous schedule for user {pollAnswer.user.id} was removed')
-                    schedule.every().day.at(lunch_time).do(
+                    schedule.every().day.at(schedule_time).do(
                         chatter_list_job,
                         bot = bot,
                         employer_telegram_id = pollAnswer.user.id

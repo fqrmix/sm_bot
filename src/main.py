@@ -10,7 +10,7 @@ from sm_bot.services.logger import logger, trace_logger
 from sm_bot.services.subscription import Subscription
 from sm_bot.handlers.workersmanager import today_workers
 from sm_bot.handlers.chattersmanager import today_chatters
-from sm_bot.handlers.bot.message.base import send_lunch_query
+from sm_bot.handlers.bot.message.base import *
 from sm_bot.handlers.bot.message import register_message_handlers
 from sm_bot.handlers.bot.callback import register_callback_handlers
 
@@ -119,11 +119,11 @@ if current_week_day in range(1,6):
 # Send today lunch-poll message to SM/POISK chat groups
 TODAY_LUNCH_TIME = "10:00"
 schedule.every().day.at(TODAY_LUNCH_TIME).do(
-    send_lunch_query,
+    lunchquery.send_lunch_query,
     chat_id=config.GROUP_CHAT_ID_SM
 )
 schedule.every().day.at(TODAY_LUNCH_TIME).do(
-    send_lunch_query, 
+    lunchquery.send_lunch_query, 
     chat_id=config.GROUP_CHAT_ID_POISK
 )
 

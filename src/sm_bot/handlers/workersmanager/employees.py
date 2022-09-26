@@ -42,8 +42,7 @@ class Employees:
                     'name': '',
                     'shifts': {}
                 }
-            logger.info(msg=f"[employees] In-self class lists was created. "\
-                f"Scope: {self.employees}\n{self.fulltime_employees}")
+            logger.info(msg=f"[employees] In-self class lists was created.")
         except Exception as error:
             logger.error(error, exc_info=True)
 

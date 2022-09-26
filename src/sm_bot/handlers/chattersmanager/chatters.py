@@ -5,6 +5,11 @@ from sm_bot.services.logger import logger
 from telebot import types
 from schedule import clear
 
+def get_lunch_time(option_id):
+    options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
+    return options[option_id]
+
+
 def get_notification_time(str):
     new_str = str.split(':')
     time_hour = int(new_str[0]) - 1
@@ -12,7 +17,7 @@ def get_notification_time(str):
     return f'{time_hour}:{time_minutes}'
 
 
-def get_lunch_time(option_id):
+def get_schedule_time(option_id):
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
     lunch_time = options[option_id]
     return get_notification_time(lunch_time)
