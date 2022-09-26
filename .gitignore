@@ -1,7 +1,17 @@
+# Cache
+__pycache__
+*.pyc
+.DS_Store
+
+# IDE
+.pylintrc
+test_src*
+*test.py
+test*
+
+# Env files
 sm_bot_venv
 sm_bot_env
-__pycache__
-.pylintrc
+employers*.csv
+employers*.json
 .env
-.DS_Store
-*test.py
