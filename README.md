@@ -1,6 +1,5 @@
 # Shopmaster Telegram Bot
 ## Description
-Это бот, который...
 
 ## Using
 1. Clone the repo:
@@ -31,23 +30,67 @@ Also it can be used that way:
 - > **/chatters** - Get a chatter list for today;
 - > **/lunch** - Send a lunch-poll;
 - > **/out** - Go out for lunch.
+- > **/sub** - Subscription to notifications info
+- > **/addchatter** - Add user to chat-list
+- > **/removechatter** - Remove user from chat-list
+- > **/webdav** - CalDAV sync settings
 
 
 ## Project architecture
 ```
-- /sm_bot - [#] Root folder
-  - /csv/
-    - employers-next.csv - [#] Employer's schedule for next month
-    - employers.csv - [#] Employer's schedule for current month
-    - employers_5_2.csv - [#] Employer's schedule for 5/2
-  - /json/
-    - employers_info.json - [#] List of employers and info
-    - employers_month.json - [#] List of month names on Russian language
-    - employers_shift.json - [#] Work shift parameters
-  - config.py - [#] Configuration file
-  - main.py - [#] Main file
-  - requirements.txt - [#] Requirements for using
-  - telegram-bot.log [#] Logger
+|-- logs                                            [#] Log folder
+|   `-- telegram-bot.log
+|-- src
+|   |-- sm_bot
+|   |   |-- config                                  [#] Configuration module
+|   |   |   `-- config.py
+|   |   |-- data
+|   |   |   |-- csv
+|   |   |   |   |-- employers_5_2.csv               [#] Employer's schedule for next month
+|   |   |   |   |-- employers.csv                   [#] Employer's schedule for current month
+|   |   |   |   `-- employers-next.csv              [#] Employer's schedule for 5/2
+|   |   |   `-- json
+|   |   |       |-- employers_info.json             [#] List of employers and info
+|   |   |       |-- employers_month.json            [#] List of month names on Russian language
+|   |   |       `-- employers_shift.json            [#] Work shift parameters      
+|   |   |-- handlers
+|   |   |   |-- bot
+|   |   |   |   |-- callback
+|   |   |   |   |   |-- chatters
+|   |   |   |   |   |   `-- chatters.py
+|   |   |   |   |   `-- subscription
+|   |   |   |   |       `-- subscription.py
+|   |   |   |   `-- message
+|   |   |   |       |-- base
+|   |   |   |       |   |-- botinit.py
+|   |   |   |       |   |-- log.py
+|   |   |   |       |   `-- lunch.py
+|   |   |   |       |-- chatters
+|   |   |   |       |   `-- chatters.py
+|   |   |   |       |-- subscription
+|   |   |   |       |   `-- subscription.py
+|   |   |   |       |-- webdav
+|   |   |   |       |   `-- menu.py
+|   |   |   |       `-- workers
+|   |   |   |           `-- workers.py
+|   |   |   |-- chattersmanager
+|   |   |   |   `-- chatters.py
+|   |   |   |-- shiftmanager
+|   |   |   |   `-- shift_changer.py
+|   |   |   `-- workersmanager
+|   |   |       |-- day_workers.py
+|   |   |       `-- employees.py
+|   |   `-- services
+|   |       |-- webdav
+|   |       |   |-- client.py
+|   |       |   `-- server.py
+|   |       |-- bot.py
+|   |       |-- logger.py
+|   |       `-- subscription.py
+|   `-- main.py                                     [#] Main file
+|-- android_instruction.md
+|-- README.md
+`-- requirements.txt                                [#] Requirements for using
 ```
 
 ## CSV architecture
@@ -61,7 +104,7 @@ Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shi
 ```
 
 ## Working shift's
-> JSON file with following format (all parameters are Str()):
+> JSON file with following format:
 ```
 {
     "1": {
@@ -92,24 +135,52 @@ Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shi
 ```
 
 ## Employers info
-> JSON file with following format (all parameters are Str()):
+> JSON file with following format:
 ```
 {
     "Employer_name_1" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
-        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)"
+        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
+        "subscription": {
+            "enabled": bool,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "calendar_url",
+            "password": "password"
+        }
     },
     "Employer_name_2" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
-        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)"
+        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
+        "subscription": {
+            "enabled": bool,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "calendar_url",
+            "password": "password"
+        }
     },
     .........
     "Employer_name_n" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
-        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)"
+        "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
+        "subscription": {
+            "enabled": bool,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "calendar_url",
+            "password": "password"
+        }
     }
+    
 }
 ```
