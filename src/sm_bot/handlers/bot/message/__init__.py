@@ -30,6 +30,7 @@ def register_message_handlers(bot: TeleBot):
     # Shift changer
     bot.register_message_handler(handle_dayoff_message, commands=['dayoff'], pass_bot=True)
     bot.register_message_handler(handle_addshift_message, commands=['addshift'], pass_bot=True)
+    bot.register_message_handler(handle_swapshift_message, commands=['swap'], pass_bot=True)
 
     # Auto-out for lunch
     bot.register_poll_answer_handler(handle_poll_answer, func=lambda call: True, pass_bot=True)
