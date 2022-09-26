@@ -15,7 +15,8 @@ def handle_swapshift_callback(call: types.CallbackQuery, bot: TeleBot):
             reply_markup=shiftswapper[telegram_id].build_keyboard(
                 keyboard_type='shiftswap_assistant',
                 telegram_id=telegram_id
-            )
+            ),
+            parse_mode='markdown'
         )
 
     elif call.data.startswith('shiftswap_assistant_id_'):
@@ -31,11 +32,12 @@ def handle_swapshift_callback(call: types.CallbackQuery, bot: TeleBot):
         bot.edit_message_text(
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            text='*Выбери тип смены*',
+            text='*Выбери смену сменщика*',
             reply_markup=shiftswapper[telegram_id].build_keyboard(
                 keyboard_type='shiftswap_assistant_shift',
                 telegram_id=telegram_id
-            )
+            ),
+            parse_mode='markdown'
         )
     
     elif call.data.startswith('shiftswap_assistant_day_'):
