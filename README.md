@@ -38,7 +38,6 @@ Also it can be used that way:
 
 ## Project architecture
 ```
-
 |-- logs                                            [#] Log folder
 |   `-- telegram-bot.log
 |-- src
