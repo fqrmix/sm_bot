@@ -58,15 +58,32 @@ Also it can be used that way:
 |   |   |   |   |-- callback
 |   |   |   |   |   |-- chatters
 |   |   |   |   |   |   `-- chatters.py
+|   |   |   |   |   |-- shifts
+|   |   |   |   |   |   |-- addshift
+|   |   |   |   |   |   |   `-- addshift.py
+|   |   |   |   |   |   |-- dayoff
+|   |   |   |   |   |   |   `-- dayoff.py
+|   |   |   |   |   |   `-- swapshift
+|   |   |   |   |   |       `-- swapshift.py
 |   |   |   |   |   `-- subscription
 |   |   |   |   |       `-- subscription.py
 |   |   |   |   `-- message
 |   |   |   |       |-- base
 |   |   |   |       |   |-- botinit.py
 |   |   |   |       |   |-- log.py
-|   |   |   |       |   `-- lunch.py
+|   |   |   |       |   |-- lunch.py
+|   |   |   |       |   `-- out.py
 |   |   |   |       |-- chatters
 |   |   |   |       |   `-- chatters.py
+|   |   |   |       |-- shiftloader
+|   |   |   |       |   `-- shiftloader.py
+|   |   |   |       |-- shifts
+|   |   |   |       |   |-- addshift
+|   |   |   |       |   |   `-- addshift.py
+|   |   |   |       |   |-- dayoff
+|   |   |   |       |   |   `-- dayoff.py
+|   |   |   |       |   `-- swapshift
+|   |   |   |       |       `-- swapshift.py
 |   |   |   |       |-- subscription
 |   |   |   |       |   `-- subscription.py
 |   |   |   |       |-- webdav
@@ -76,7 +93,8 @@ Also it can be used that way:
 |   |   |   |-- chattersmanager
 |   |   |   |   `-- chatters.py
 |   |   |   |-- shiftmanager
-|   |   |   |   `-- shift_changer.py
+|   |   |   |   |-- shift_changer.py
+|   |   |   |   `-- shift_swapper.py
 |   |   |   `-- workersmanager
 |   |   |       |-- day_workers.py
 |   |   |       `-- employees.py
