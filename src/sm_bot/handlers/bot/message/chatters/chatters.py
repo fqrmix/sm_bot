@@ -6,6 +6,7 @@ from sm_bot.services.logger import logger
 from sm_bot.config import config
 from telebot import types, TeleBot
 import schedule
+import operator
 
 # Send chatters list
 def handle_chatters(message: types.Message, bot: TeleBot):
@@ -81,21 +82,25 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
     else:
         lunch_time = get_lunch_time(pollAnswer.option_ids[0])
         logger.info(f'[poll-answer-handler] User {pollAnswer.user.id} has choosen {lunch_time} time for lunch')
-        lunch_employee = {
-            'id': str,
-            'name': str,
-            'lunch_time': str
-        }
         employer_name, employer_info = Employees.get_employer_name(
             val=str(pollAnswer.user.id),
             parameter='telegram_id', 
             my_dict=config.employers_info
         )
+
+        lunch_employee = {
+            'id': str,
+            'name': str,
+            'lunch_time': str
+        }
+        
         lunch_employee['id'] = pollAnswer.user.id
         lunch_employee['name'] = employer_name
         lunch_employee['lunch_time'] = lunch_time
         lunchquery.lunch_list.append(lunch_employee)
+        lunchquery.lunch_list.sort(key=operator.itemgetter('lunch_time'))
         lunchquery.update_markup(bot)
+
         try:
             schedule_time = get_schedule_time(pollAnswer.option_ids[0])
             for current_chatter in today_chatters.chatter_list:

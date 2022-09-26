@@ -14,7 +14,7 @@ def handle_dayoff_callback(call: types.CallbackQuery, bot: TeleBot):
                 bot.edit_message_text(
                     chat_id=call.message.chat.id,
                     message_id=call.message.message_id,
-                    text='Выбери день окончания отсутствия',
+                    text='*Выбери день окончания отсутствия*',
                     reply_markup=shiftchanger[telegram_id].build_keyboard(
                         keyboard_type='dayoff_start', 
                         telegram_id=telegram_id, 
@@ -36,8 +36,7 @@ def handle_dayoff_callback(call: types.CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
-                text=f"Ты, {shiftchanger[telegram_id].dayoff['name']}, "\
-                    f"добавил отсутствие {dayoff_text}",
+                text=f"*Ты успешно добавил отсутствие {dayoff_text}*",
                 reply_markup=None
             )
     except Exception as e:
