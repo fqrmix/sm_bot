@@ -45,7 +45,7 @@ def handle_remove_chatters(message: types.Message, bot: TeleBot):
         logger.error(error, exc_info = True)
 
 # Chatter list job
-def chatter_list_job(employer_telegram_id, bot: TeleBot) -> schedule.CancelJob:
+def chatter_list_job(employer_telegram_id) -> schedule.CancelJob:
     try:
         chat_id = None
         employer_name, employer_info = Employees.get_employer_name(
@@ -110,12 +110,14 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
                         logger.info(f'[poll-answer-handler] Schedule for user [{employer_name} | ID: {pollAnswer.user.id}] was already created')
                         schedule.clear(str(pollAnswer.user.id))
                         logger.info(f'[poll-answer-handler] Previous schedule for user [{employer_name} | ID: {pollAnswer.user.id}] was removed')
-                    schedule.every().day.at(schedule_time).do(
-                        chatter_list_job,
-                        bot = bot,
-                        employer_telegram_id = pollAnswer.user.id
-                    ).tag(str(pollAnswer.user.id))
-                    logger.info(f'[poll-answer-handler] Schedule for lunch-out was created for user [{employer_name} | ID: {pollAnswer.user.id}]')
+                    try:
+                        schedule.every().day.at(schedule_time).do(
+                            chatter_list_job,
+                            employer_telegram_id = pollAnswer.user.id
+                        ).tag(str(pollAnswer.user.id))
+                    except Exception as error:
+                        logger.error(error, exc_info=True)
+                    logger.info(f'[poll-answer-handler] Schedule for lunch-out was created for user [{employer_name} | ID: {pollAnswer.user.id}] | Time: {schedule_time}')
                     current_chatter['chat']['lunch_time'] = lunch_time
                     current_chatter['chat']['scheduled'] = True
                     logger.info(f"[poll-answer-handler] User [{employer_name} | ID: {pollAnswer.user.id}] "\
