@@ -112,6 +112,7 @@ class DayWorkers(Employees):
     
     def _update(self) -> None:
         self.__init__()
+        logger.info("[day-workers] DayWorkers class was successfully updated")
 
     """
     Workers class static methods

@@ -73,7 +73,6 @@ def chatter_list_job(employer_telegram_id, bot: TeleBot) -> schedule.CancelJob:
 
 # Auto-out for lunch
 def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
-    print(pollAnswer)
     if len(pollAnswer.option_ids) == 0:
         for employee in lunchquery.lunch_list:
             if employee['id'] == pollAnswer.user.id:

@@ -71,8 +71,13 @@ class Employees:
 
     @staticmethod
     def save_employees_list(path: str, employees: list, workers_fieldnames: list):
-        with open(path, 'w', encoding='utf-8-sig', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=workers_fieldnames, delimiter=';')
-            writer.writeheader()
-            writer.writerows(employees)
+        try:
+            with open(path, 'w', encoding='utf-8-sig', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=workers_fieldnames, delimiter=';')
+                writer.writeheader()
+                writer.writerows(employees)
+                logger.info(f"[employees] Employees list was successfully saved.")
+        except Exception as error:
+            logger.error(error, exc_info=True)
+
 
