@@ -78,7 +78,7 @@ Also it can be used that way:
 |   |   |   |       |   `-- out.py                          [#][#] /out command
 |   |   |   |       |-- chatters                        [#][#] /chatter | /addchatter | /removechatter commands
 |   |   |   |       |   `-- chatters.py
-|   |   |   |       |-- shiftloader                     [#][#] Shift loader
+|   |   |   |       |-- shiftloader                     [#][#] /load command
 |   |   |   |       |   `-- shiftloader.py
 |   |   |   |       |-- shifts                          [#][#] Some shift commands
 |   |   |   |       |   |-- addshift                        [#][#] /addshift command
@@ -108,7 +108,7 @@ Also it can be used that way:
 |   |       |-- bot.py                                  [##] Bot service
 |   |       |-- logger.py                               [##] Logger service
 |   |       `-- subscription.py                         [##] Subscription service
-|   `-- main.py                                     [#] Main file
+|   `-- main.py                                     [#] Main file [#]
 |-- android_instruction.md
 |-- README.md
 `-- requirements.txt                                [#] Requirements for using
