@@ -34,6 +34,9 @@ Also it can be used that way:
 - > **/addchatter** - Add user to chat-list
 - > **/removechatter** - Remove user from chat-list
 - > **/webdav** - CalDAV sync settings
+- > **/dayoff** - Take dayoff
+- > **/addshift** - Add or change shift in schedule
+- > **/swap** - Swap shift with another employee
 
 
 ## Project architecture
@@ -46,13 +49,13 @@ Also it can be used that way:
 |   |   |   `-- config.py
 |   |   |-- data
 |   |   |   |-- csv
-|   |   |   |   |-- employers_5_2.csv               [#] Employer's schedule for next month
-|   |   |   |   |-- employers.csv                   [#] Employer's schedule for current month
-|   |   |   |   `-- employers-next.csv              [#] Employer's schedule for 5/2
+|   |   |   |   |-- employers_5_2.csv               [#] Employee's schedule for next month
+|   |   |   |   |-- employers.csv                   [#] Employee's schedule for current month
+|   |   |   |   `-- employers-next.csv              [#] Employee's schedule for 5/2
 |   |   |   `-- json
-|   |   |       |-- employers_info.json             [#] List of employers and info
+|   |   |       |-- employers_info.json             [#] List of employees info
 |   |   |       |-- employers_month.json            [#] List of month names on Russian language
-|   |   |       `-- employers_shift.json            [#] Work shift parameters      
+|   |   |       `-- employers_shift.json            [#] Work shift parameters
 |   |   |-- handlers
 |   |   |   |-- bot                                 
 |   |   |   |   |-- callback                        [#] Bot callback handlers [#]
@@ -112,13 +115,13 @@ Also it can be used that way:
 ```
 
 ## CSV architecture
-> If work_shift is empty - employers doesn't work today
+> If work_shift is empty - employee doesn't work today
 ```
 Month;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31
-Employer name[1];;;4;;;4;4;;4;4;;;4;;2;2;;;2;2;;;;;;4;4;;;4;4
-Employer name[2];1;3;;;1;1;;1;;1;1;;1;4;;;1;1;;1;1;;;;;1;1;;1;;
+Employee name[1];;;4;;;4;4;;4;4;;;4;;2;2;;;2;2;;;;;;4;4;;;4;4
+Employee name[2];1;3;;;1;1;;1;;1;1;;1;4;;;1;1;;1;1;;;;;1;1;;1;;
 .........
-Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shift;....work_shift
+Employee name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shift;....work_shift
 ```
 
 ## Working shift's
@@ -152,11 +155,11 @@ Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shi
 }
 ```
 
-## Employers info
+## Employees info
 > JSON file with following format:
 ```
 {
-    "Employer_name_1" : {
+    "Employee_name_1" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
         "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
@@ -170,7 +173,7 @@ Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shi
             "password": "password"
         }
     },
-    "Employer_name_2" : {
+    "Employee_name_2" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
         "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
@@ -185,7 +188,7 @@ Employer name[n] work_shift;work_shift;work_shift;work_shift;work_shift;work_shi
         }
     },
     .........
-    "Employer_name_n" : {
+    "Employee_name_n" : {
         "telegram" : "Employer telegram",
         "telegram_id" : "Employer telegram id",
         "group" : "Employer group (ShopMaster/Poisk/CMS/LK)",
