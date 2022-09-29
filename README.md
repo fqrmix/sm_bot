@@ -54,57 +54,57 @@ Also it can be used that way:
 |   |   |       |-- employers_month.json            [#] List of month names on Russian language
 |   |   |       `-- employers_shift.json            [#] Work shift parameters      
 |   |   |-- handlers
-|   |   |   |-- bot
-|   |   |   |   |-- callback
-|   |   |   |   |   |-- chatters
+|   |   |   |-- bot                                 
+|   |   |   |   |-- callback                        [#] Bot callback handlers
+|   |   |   |   |   |-- chatters                        [##] Bot chatters callback handler
 |   |   |   |   |   |   `-- chatters.py
-|   |   |   |   |   |-- shifts
-|   |   |   |   |   |   |-- addshift
+|   |   |   |   |   |-- shifts                          
+|   |   |   |   |   |   |-- addshift                    [##] Bot shift add callback handler
 |   |   |   |   |   |   |   `-- addshift.py
-|   |   |   |   |   |   |-- dayoff
+|   |   |   |   |   |   |-- dayoff                      [##] Bot shift dayoff callback handler
 |   |   |   |   |   |   |   `-- dayoff.py
-|   |   |   |   |   |   `-- swapshift
+|   |   |   |   |   |   `-- swapshift                   [##] Bot shift swap callback handler
 |   |   |   |   |   |       `-- swapshift.py
 |   |   |   |   |   `-- subscription
 |   |   |   |   |       `-- subscription.py
-|   |   |   |   `-- message
-|   |   |   |       |-- base
-|   |   |   |       |   |-- botinit.py
-|   |   |   |       |   |-- log.py
-|   |   |   |       |   |-- lunch.py
+|   |   |   |   `-- message                         [#] Bot message handlers
+|   |   |   |       |-- base                            [#][#] Basic commands
+|   |   |   |       |   |-- botinit.py                      [#][#] /init command
+|   |   |   |       |   |-- log.py                          [#][#] /log command
+|   |   |   |       |   |-- lunch.py                        [#][#] /lunch command
 |   |   |   |       |   `-- out.py
-|   |   |   |       |-- chatters
+|   |   |   |       |-- chatters                        [#][#] /chatter | /addchatter | /removechatter commands
 |   |   |   |       |   `-- chatters.py
-|   |   |   |       |-- shiftloader
+|   |   |   |       |-- shiftloader                     [#][#] Shift loader
 |   |   |   |       |   `-- shiftloader.py
-|   |   |   |       |-- shifts
-|   |   |   |       |   |-- addshift
+|   |   |   |       |-- shifts                          [#][#] Some shift commands
+|   |   |   |       |   |-- addshift                        [#][#] /addshift command
 |   |   |   |       |   |   `-- addshift.py
-|   |   |   |       |   |-- dayoff
+|   |   |   |       |   |-- dayoff                          [#][#] /dayoff command
 |   |   |   |       |   |   `-- dayoff.py
-|   |   |   |       |   `-- swapshift
-|   |   |   |       |       `-- swapshift.py
-|   |   |   |       |-- subscription
-|   |   |   |       |   `-- subscription.py
-|   |   |   |       |-- webdav
-|   |   |   |       |   `-- menu.py
-|   |   |   |       `-- workers
-|   |   |   |           `-- workers.py
-|   |   |   |-- chattersmanager
+|   |   |   |       |   `-- swapshift                       [#][#] /swap command
+|   |   |   |       |       `-- swapshift.py        
+|   |   |   |       |-- subscription                    [#][#] /sub command
+|   |   |   |       |   `-- subscription.py         
+|   |   |   |       |-- webdav                          [#][#] /webdav command
+|   |   |   |       |   `-- menu.py         
+|   |   |   |       `-- workers                         [#][#] /workers command
+|   |   |   |           `-- workers.py                  
+|   |   |   |-- chattersmanager                     [#] Chatter manager
 |   |   |   |   `-- chatters.py
-|   |   |   |-- shiftmanager
+|   |   |   |-- shiftmanager                        [#] Shift manager
 |   |   |   |   |-- shift_changer.py
 |   |   |   |   `-- shift_swapper.py
-|   |   |   `-- workersmanager
+|   |   |   `-- workersmanager                      [#] Workers manager
 |   |   |       |-- day_workers.py
 |   |   |       `-- employees.py
-|   |   `-- services
-|   |       |-- webdav
+|   |   `-- services                                [#] Services
+|   |       |-- webdav                                  [##] WebDAV service
 |   |       |   |-- client.py
 |   |       |   `-- server.py
-|   |       |-- bot.py
-|   |       |-- logger.py
-|   |       `-- subscription.py
+|   |       |-- bot.py                                  [##] Bot service
+|   |       |-- logger.py                               [##] Logger service
+|   |       `-- subscription.py                         [##] Subscription service
 |   `-- main.py                                     [#] Main file
 |-- android_instruction.md
 |-- README.md
