@@ -55,7 +55,7 @@ Also it can be used that way:
 |   |   |       `-- employers_shift.json            [#] Work shift parameters      
 |   |   |-- handlers
 |   |   |   |-- bot                                 
-|   |   |   |   |-- callback                        [#] Bot callback handlers
+|   |   |   |   |-- callback                        [#] Bot callback handlers [#]
 |   |   |   |   |   |-- chatters                        [##] Bot chatters callback handler
 |   |   |   |   |   |   `-- chatters.py
 |   |   |   |   |   |-- shifts                          
@@ -67,12 +67,12 @@ Also it can be used that way:
 |   |   |   |   |   |       `-- swapshift.py
 |   |   |   |   |   `-- subscription
 |   |   |   |   |       `-- subscription.py
-|   |   |   |   `-- message                         [#] Bot message handlers
+|   |   |   |   `-- message                         [#] Bot message handlers [#]
 |   |   |   |       |-- base                            [#][#] Basic commands
 |   |   |   |       |   |-- botinit.py                      [#][#] /init command
 |   |   |   |       |   |-- log.py                          [#][#] /log command
 |   |   |   |       |   |-- lunch.py                        [#][#] /lunch command
-|   |   |   |       |   `-- out.py
+|   |   |   |       |   `-- out.py                          [#][#] /out command
 |   |   |   |       |-- chatters                        [#][#] /chatter | /addchatter | /removechatter commands
 |   |   |   |       |   `-- chatters.py
 |   |   |   |       |-- shiftloader                     [#][#] Shift loader
@@ -98,7 +98,7 @@ Also it can be used that way:
 |   |   |   `-- workersmanager                      [#] Workers manager
 |   |   |       |-- day_workers.py
 |   |   |       `-- employees.py
-|   |   `-- services                                [#] Services
+|   |   `-- services                                [#] Services [#]
 |   |       |-- webdav                                  [##] WebDAV service
 |   |       |   |-- client.py
 |   |       |   `-- server.py
