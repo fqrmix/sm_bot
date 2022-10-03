@@ -1,4 +1,3 @@
-from sm_bot.handlers.bot.message.base import lunch
 from sm_bot.handlers.chattersmanager import *
 from sm_bot.handlers.workersmanager.employees import Employees
 from sm_bot.handlers.bot.message.base import *
@@ -86,19 +85,28 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
             parameter='telegram_id', 
             my_dict=config.employers_info
         )
+        in_lunch_list = False
+        for single_employee in lunchquery.lunch_list:
+            if single_employee['id'] == pollAnswer.user.id:
+                if lunch_time != single_employee['lunch_time']:
+                    single_employee['lunch_time'] = lunch_time
+                    lunchquery.lunch_list.sort(key=operator.itemgetter('lunch_time'))
+                    lunchquery.update_markup(bot)
+                in_lunch_list = True
 
-        lunch_employee = {
-            'id': str,
-            'name': str,
-            'lunch_time': str
-        }
-        
-        lunch_employee['id'] = pollAnswer.user.id
-        lunch_employee['name'] = employer_name
-        lunch_employee['lunch_time'] = lunch_time
-        lunchquery.lunch_list.append(lunch_employee)
-        lunchquery.lunch_list.sort(key=operator.itemgetter('lunch_time'))
-        lunchquery.update_markup(bot)
+        if not in_lunch_list:
+            lunch_employee = {
+                'id': str,
+                'name': str,
+                'lunch_time': str
+            }
+            
+            lunch_employee['id'] = pollAnswer.user.id
+            lunch_employee['name'] = employer_name
+            lunch_employee['lunch_time'] = lunch_time
+            lunchquery.lunch_list.append(lunch_employee)
+            lunchquery.lunch_list.sort(key=operator.itemgetter('lunch_time'))
+            lunchquery.update_markup(bot)
 
         try:
             schedule_time = get_schedule_time(pollAnswer.option_ids[0])

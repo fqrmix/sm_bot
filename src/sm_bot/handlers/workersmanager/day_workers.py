@@ -162,10 +162,12 @@ class DayWorkers(Employees):
         text_message = ''
         for employee in group_list:
             if employee['group'] == 'CMS' or employee['group'] == 'LK':
-                text_message += f"[{employee['name']}](tg://user?id={employee['telegram_id']})"\
-                f" | `{employee['group']}`" \
-                f" | Cмена: `{employee['shift_start']}` - `{employee['shift_end']}`\n"
+                text_message += f"`{employee['shift_start']}` - `{employee['shift_end']}` | "\
+                    f"[{employee['name']}](tg://user?id={employee['telegram_id']}) | "\
+                    f"`{employee['group']}`\n"
+                
             else:
-                text_message += f"[{employee['name']}](tg://user?id={employee['telegram_id']})"\
-                f" | Cмена: `{employee['shift_start']}` - `{employee['shift_end']}`\n"
+                text_message += f"`{employee['shift_start']}` - `{employee['shift_end']}` | "\
+                    f"[{employee['name']}](tg://user?id={employee['telegram_id']})\n"\
+                
         return text_message
