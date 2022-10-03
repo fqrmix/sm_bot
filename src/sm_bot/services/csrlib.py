@@ -1,6 +1,14 @@
 import pathlib
 from sm_bot.services.logger import logger
 
+class CsrWarning(Warning):
+    def __init__(self, message):
+        super().__init__(message)
+        self.message = message
+    
+    def __str__(self) -> str:
+        return self.message
+
 def convert(data):
     if isinstance(data, bytes):
         return data.decode('ascii')
