@@ -20,7 +20,7 @@ def handle_log(message: types.Message, bot: TeleBot):
     '''
     value = (message.text).replace('/log ', '') # Number after /log message
     lines = 5 if value == '/log' else int(value) # 5 - default value, if value in message is empty
-    log_to_bot = get_log_str(log_name='telegram-bot.log', lines=lines)
+    log_to_bot = get_log_str(log_name='./logs/telegram-bot.log', lines=lines)
     try:
         if len(log_to_bot) > 4096:
             for x in range(0, len(log_to_bot), 4096):
