@@ -109,7 +109,7 @@ class Subscription:
             bot.send_message(
                     chat_id = actual_employee['telegram_id'],
                     parse_mode = "Markdown",
-                    text = f"Привет!\nТы завтра работаешь с {actual_employee['shift_start']}"\
+                    text = f"Привет!\nТы завтра работаешь с {actual_employee['shift_start']} "\
                         f"до {actual_employee['shift_end']}"
                 )
             logger.info(msg=f"[Sub] Subscription message was send to user: {actual_employee['name']}")
@@ -176,6 +176,11 @@ class Subscription:
                 chat_id=message.chat.id,
                 text=text_message
             )
+
+    @classmethod
+    def update(cls):
+        cls.__init__()
+        cls.create_schedule()
 
     @staticmethod
     def build_keyboard(keyboard_type):

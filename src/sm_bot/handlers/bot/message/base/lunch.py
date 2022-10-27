@@ -1,6 +1,7 @@
 from telebot import types, TeleBot
 from sm_bot.services.logger import logger
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from sm_bot.services.bot import bot
 
 class LunchQuery:
     def __init__(self) -> None:
@@ -8,7 +9,7 @@ class LunchQuery:
         self.lunch_list = list()
 
     # Send lunch poll
-    def send_lunch_query(self, chat_id, bot: TeleBot) -> None:
+    def send_lunch_query(self, chat_id) -> None:
         '''
             Function that send lunch poll to Telegram Chat.
             _______
@@ -54,13 +55,13 @@ lunchquery = LunchQuery()
 # Repeat lunch poll
 def handle_lunch(message: types.Message, bot: TeleBot) -> None:
     '''
-        Telegram handler of command /lunch, which loading CSV file for next month.
+        Telegram handler of command /lunch
         _______
         Arguments:
             *message == Object of message
     '''
     try:
-        lunchquery.send_lunch_query(message.chat.id, bot)
+        lunchquery.send_lunch_query(message.chat.id)
     except Exception as error:
         bot.send_message(
             chat_id=message.chat.id,

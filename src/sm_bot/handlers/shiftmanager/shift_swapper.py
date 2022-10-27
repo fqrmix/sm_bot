@@ -1,6 +1,7 @@
 from sm_bot.handlers.workersmanager import today_workers
 from sm_bot.handlers.shiftmanager import *
 from sm_bot.handlers.workersmanager.employees import Employees
+from sm_bot.services.logger import logger
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import sm_bot.config.config as config
 
@@ -20,10 +21,13 @@ class ShiftSwapper(Employees):
         }
 
     def build_keyboard(self, telegram_id: str, keyboard_type: str) -> InlineKeyboardMarkup:
+        try:
             keyboard = InlineKeyboardMarkup(row_width = 2)
             buttons_list = self.create_buttons(telegram_id, keyboard_type)
             keyboard.add(*buttons_list)
             return keyboard
+        except Exception as error:
+            logger.error(error, exc_info=True)            
 
     def create_buttons(self, telegram_id: str, keyboard_type: str) -> list:
         buttons_list = []
@@ -93,28 +97,41 @@ class ShiftSwapper(Employees):
             return buttons_list
     
     def swap_shifts(self) -> None:
-        fieldnames = []
-        employees = self.get_employer_list(config.CSV_PATH)
-        for employee in employees:
-            for current_obj in employee:
-                if employee[current_obj] == self.shiftswap['user_name']:
-                    for item in employee:
-                        if item.isdigit() and int(item) == self.shiftswap['user_shift_day']:
-                            self.shiftswap['user_shift_type'] = employee[item]
-                if employee[current_obj] == self.shiftswap['assistant_name']:
-                    for item in employee:
-                        if item.isdigit() and int(item) == self.shiftswap['assistant_shift_day']:
-                            self.shiftswap['assistant_shift_type'] = employee[item]
-        print(employees, self.shiftswap)
-        for employee in employees:
-            for current_obj in employee:
-                for item in employee:
+        try:
+            fieldnames = []
+            employees = self.get_employer_list(config.CSV_PATH)
+            for employee in employees:
+                for current_obj in employee:
                     if employee[current_obj] == self.shiftswap['user_name']:
-                        if item.isdigit() and int(item) == self.shiftswap['user_shift_day']:
-                            employee[item] = self.shiftswap['assistant_shift_type']
+                        for item in employee:
+                            if item.isdigit() and int(item) == self.shiftswap['user_shift_day']:
+                                self.shiftswap['user_shift_type'] = employee[item]
+                                logger.info(f"[shiftswapper] | [{self.shiftswap['user_name']}] "\
+                                    f"User shift type was found: {self.shiftswap['user_shift_type']}")
                     if employee[current_obj] == self.shiftswap['assistant_name']:
-                        if item.isdigit() and int(item) == self.shiftswap['assistant_shift_day']:
-                            employee[item] = self.shiftswap['user_shift_type']
-                        fieldnames.append(item)
-        self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
-        today_workers._update()
+                        for item in employee:
+                            if item.isdigit() and int(item) == self.shiftswap['assistant_shift_day']:
+                                self.shiftswap['assistant_shift_type'] = employee[item]
+                                logger.info(f"[shiftswapper] | [{self.shiftswap['user_name']}]"\
+                                        f"Assistant [{self.shiftswap['assistant_name']}] shift type was found:"\
+                                        f"{self.shiftswap['assistant_shift_type']}")
+            for employee in employees:
+                for current_obj in employee:
+                    for item in employee:
+                        if employee[current_obj] == self.shiftswap['user_name']:
+                            if item.isdigit() and int(item) == self.shiftswap['user_shift_day']:
+                                employee[item] = self.shiftswap['assistant_shift_type']
+                                logger.info(f"[shiftswapper] | [{self.shiftswap['user_name']}] "\
+                                    f"User shift [{self.shiftswap['user_shift_type']}] was successfully replaced by "\
+                                    f"[[{self.shiftswap['assistant_name']}]] shift: {self.shiftswap['assistant_shift_type']}")
+                        if employee[current_obj] == self.shiftswap['assistant_name']:
+                            if item.isdigit() and int(item) == self.shiftswap['assistant_shift_day']:
+                                employee[item] = self.shiftswap['user_shift_type']
+                                logger.info(f"[shiftswapper] | [{self.shiftswap['user_name']}] "\
+                                    f"Assistant shift [{self.shiftswap['assistant_name']}] was successfully replaced by "\
+                                    f"[[{self.shiftswap['user_name']}]] shift: {self.shiftswap['user_shift_type']}")
+                            fieldnames.append(item)
+            self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
+            today_workers._update()
+        except Exception as error:
+            logger.error(error, exc_info=True)

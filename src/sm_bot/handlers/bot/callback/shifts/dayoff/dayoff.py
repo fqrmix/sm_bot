@@ -19,7 +19,8 @@ def handle_dayoff_callback(call: types.CallbackQuery, bot: TeleBot):
                         keyboard_type='dayoff_start', 
                         telegram_id=telegram_id, 
                         dayoff_start=dayoff_start
-                    )
+                    ),
+                    parse_mode='Markdown'
                 )
             except Exception as e:
                 print(e)
@@ -37,7 +38,8 @@ def handle_dayoff_callback(call: types.CallbackQuery, bot: TeleBot):
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
                 text=f"*Ты успешно добавил отсутствие {dayoff_text}*",
-                reply_markup=None
+                reply_markup=None,
+                parse_mode='Markdown'
             )
     except Exception as e:
         print(e)

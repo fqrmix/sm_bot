@@ -1,3 +1,4 @@
+from ast import Raise
 import datetime
 from sm_bot.handlers.workersmanager.employees import Employees
 from sm_bot.services.webdav import WebDAV
@@ -57,14 +58,18 @@ def load_employers_csv(message: types.Message):
     else:
         try:
             file_info = bot.get_file(message.document.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            with open(config.NEXT_MONTH_CSV_PATH, 'wb') as csv_file:
-                csv_file.write(downloaded_file)
-            bot.reply_to(message, "График на следующий месяц загружен!")
-            logger.info("[load] График на следующий месяц загружен!")
-            current_month = datetime.date.today().month
-            next_month = current_month + 1 if current_month != 12 else 1
-            WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
+            if not file_info.file_path.endswith('.csv'):
+                raise Exception('[load] Для загрузки допустимы только файлы с форматом .csv (разделитель запятая)')
+            else:
+                downloaded_file = bot.download_file(file_info.file_path)
+                with open(config.NEXT_MONTH_CSV_PATH, 'wb') as csv_file:
+                    csv_file.write(downloaded_file)
+                bot.reply_to(message, "График на следующий месяц загружен!")
+                logger.info("[load] График на следующий месяц загружен!")
+                current_month = datetime.date.today().month
+                next_month = current_month + 1 if current_month != 12 else 1
+                WebDAV(config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
+            
         except Exception as error:
             bot.send_message(
                 chat_id=message.chat.id,

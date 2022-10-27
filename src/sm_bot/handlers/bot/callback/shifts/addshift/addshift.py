@@ -12,10 +12,11 @@ def handle_addshift_callback(call: types.CallbackQuery, bot: TeleBot):
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
-                text=f"*Ты, успешно добавил смену "\
+                text=f"*Ты успешно добавил смену "\
                     f"{config.working_shift[shiftchanger[telegram_id].shift['type'][0]]['start']} - "\
                     f"{config.working_shift[shiftchanger[telegram_id].shift['type'][0]]['end']}*",
-                reply_markup=None
+                reply_markup=None,
+                parse_mode='Markdown'
                 
             )
             shiftchanger[telegram_id].add_shift()
@@ -34,7 +35,8 @@ def handle_addshift_callback(call: types.CallbackQuery, bot: TeleBot):
                 reply_markup=shiftchanger[telegram_id].build_keyboard(
                     keyboard_type='addshift_list',
                     telegram_id=telegram_id
-                )
+                ),
+                parse_mode='Markdown'
             )
 
 
