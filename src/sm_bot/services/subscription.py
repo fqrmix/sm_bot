@@ -15,10 +15,11 @@ from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 
 class Subscription:
     @classmethod
-    def __init__(cls):
+    def __init__(cls, test_run=False):
         current_employee_sub = {}
         cls.active_sub_list = []
         cls.employees_info = config.employers_info
+        cls.test_run = test_run
         for employee in cls.employees_info:
             current_employee = cls.employees_info[employee]
             if current_employee['subscription']['enabled'] == True:
@@ -122,7 +123,7 @@ class Subscription:
             logger.error(error, exc_info = True)
 
     @classmethod
-    def create_schedule(cls):
+    def create_schedule(cls) -> schedule:
         try:
             now = datetime.datetime.now()
             current_month_days = calendar.monthrange(now.year, now.month)[1]
@@ -135,18 +136,20 @@ class Subscription:
             for current_employee_sub in cls.active_sub_list:
                 for current_employee in all_employees.employees:
                     if current_employee['name'] == current_employee_sub['name']:
-                        if current_employee['shifts'][day] != "" \
-                        and current_employee['shifts'][day] != "ОТ":
+                        if (current_employee['shifts'][day] != "" \
+                        and current_employee['shifts'][day] != "ОТ") or not cls.test_run:
                             actual_employee = DayWorkers.create_actual_employee(current_employee, day)
-                            schedule.every().day.at(current_employee_sub['time_to_notify']).do(
+                            actual_schedule = schedule.every().day.at(current_employee_sub['time_to_notify']).do(
                                 cls.__sending_job__,
                                 actual_employee=actual_employee
                             )
                             logger.info(
                                 msg=f"[Sub] Schedule for {current_employee_sub['name']} was created," \
                                     f" time: {current_employee_sub['time_to_notify']}")
+                            return actual_schedule
         except Exception as error:
             logger.error(error, exc_info = True)
+            return None
 
     @classmethod
     def handle_change_subtime(cls, message, telegram_id):

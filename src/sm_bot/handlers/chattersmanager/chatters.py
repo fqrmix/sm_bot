@@ -1,21 +1,20 @@
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
+from sm_bot.handlers.workersmanager.employees import Employees
 import sm_bot.config.config as config
 from sm_bot.services.bot import bot
 from sm_bot.services.logger import logger
 from telebot import types
-from schedule import clear
+import schedule
 
 def get_lunch_time(option_id: int) -> str:
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
     return options[option_id]
-
 
 def get_notification_time(str: str) -> str:
     new_str = str.split(':')
     time_hour = int(new_str[0]) - 1
     time_minutes = int(new_str[1]) + 55
     return f'{time_hour}:{time_minutes}'
-
 
 def get_schedule_time(option_id: int) -> str:
     options = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00']
@@ -184,8 +183,35 @@ class Chatters(DayWorkers):
                     )
                     logger.info(msg=f"[chatters] Chatter {current_emoloyer['name']} was successfully removed, "\
                         f"\nmessage was sent to chatID: {chat_id}")
-                    shedule_clear = clear(telegram_id)
+                    shedule_clear = schedule.clear(telegram_id)
                     return message
         except Exception as error:
             logger.error(error, exc_info = True)
 
+    @staticmethod
+    # Chatter list job
+    def chatter_list_job(employer_telegram_id) -> schedule.CancelJob:
+        try:
+            chat_id = None
+            employer_name, employer_info = Employees.get_employer_name(
+                val=str(employer_telegram_id),
+                parameter='telegram_id', 
+                my_dict=config.employers_info
+            )
+            if employer_info['group'] == 'ShopMaster':
+                chat_id = config.GROUP_CHAT_ID_SM
+            elif employer_info['group'] == 'Poisk':
+                chat_id = config.GROUP_CHAT_ID_POISK
+            if chat_id is not None:
+                bot.send_message(
+                    chat_id = chat_id,
+                    parse_mode = "Markdown",
+                    text = f"[{employer_name}](tg://user?id={employer_telegram_id}) скоро уйдет на обед."\
+                        f"\nКоллеги, подмените пожалуйста его в чатах."
+                )
+                logger.info(msg=f"[chatter-job] Chatter job was completed for {employer_name}")
+                return schedule.CancelJob
+            else:
+                return schedule.CancelJob
+        except Exception as error:
+            logger.error(error, exc_info = True)
