@@ -30,7 +30,7 @@ def handle_out(message: types.Message, bot: TeleBot):
             chat_id = message.chat.id,
             parse_mode = "Markdown",
             text = f"[{employer_name}](tg://user?id={employer_telegram_id}) ушел(-ла) на обед."\
-                f"\nКоллеги, подмените пожалуйста его в чатах.")
+                f"\nРебята, подмените пожалуйста коллегу в чатах.")
         logger.info(f"[out] User @{message.from_user.username} successfully use command /out in "\
             f"chatID - {message.chat.id}, chatName - {message.chat.title}")
     except Exception as error:
