@@ -4,7 +4,9 @@ import locale
 import datetime
 import uuid
 import schedule
+from isdayoff import DateType
 from sm_bot.config import config
+from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 from sm_bot.services.bot import bot
 from sm_bot.services.logger import logger, trace_logger
 from sm_bot.services.subscription import Subscription
@@ -90,8 +92,7 @@ def run_continuously(interval=1):
     continuous_thread.start()
     return cease_continuous_run
 
-current_day = str(datetime.date.today().day)
-current_week_day = datetime.date.today().isoweekday()
+current_date = datetime.date.today()
 
 # Send today employers message to SM/POISK chat groups
 TODAY_EMPOYERS_TIME = "08:00"
@@ -106,9 +107,9 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 
 # Send chatters list message to SM/POISK chat groups
 TODAY_CHATTERS_TIME = "08:30"
-if current_week_day in range(1,6):
+if DayWorkers.get_dayoff_info(current_date) is DateType.WORKING:
     schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-        today_chatters.send_chatter_list, 
+        today_chatters.send_chatter_list,
         chat_id=config.GROUP_CHAT_ID_SM,
     )
     schedule.every().day.at(TODAY_CHATTERS_TIME).do(
