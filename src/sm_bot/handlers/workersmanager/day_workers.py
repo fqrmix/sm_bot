@@ -173,17 +173,15 @@ class DayWorkers(Employees):
         return text_message
 
     @staticmethod
-    def get_dayoff_info(date):
-        result = DateType.NOT_WORKING
+    def get_dayoff_info(date: datetime.date) -> DateType:
 
         async def async_coroutine():
             calendar = ProdCalendar()
-            flag = await calendar.date(date)
-            return flag
+            is_working_day = await calendar.date(date)
+            await calendar.close()
+            return is_working_day
         
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        coroutine = async_coroutine()
-        result = loop.run_until_complete(coroutine)
-
-        return result
+        
+        return loop.run_until_complete(async_coroutine())
