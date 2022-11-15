@@ -3,7 +3,9 @@ import time
 import locale
 import datetime
 import schedule
+import cherrypy
 from isdayoff import DateType
+from webhook import server
 from sm_bot.config import config
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 from sm_bot.services.bot import bot
@@ -87,12 +89,9 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
     chat_id=config.GROUP_CHAT_ID_POISK
 )
 
-############################
-## Start infinity polling ##
-############################
-
 if __name__ == '__main__':
+    bot.delete_webhook()
+    bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
     stop_run_continuously = run_continuously()
-    bot.infinity_polling()
+    cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
     stop_run_continuously.set()
-
