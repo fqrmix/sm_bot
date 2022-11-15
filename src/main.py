@@ -4,8 +4,8 @@ import locale
 import datetime
 import schedule
 import cherrypy
-import telebot
 from isdayoff import DateType
+from webhook import server
 from sm_bot.config import config
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 from sm_bot.services.bot import bot
@@ -89,22 +89,9 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
     chat_id=config.GROUP_CHAT_ID_POISK
 )
 
-class WebhookServer(object):
-    @cherrypy.expose
-    def index(self):
-        length = int(cherrypy.request.headers['content-length'])
-        json_string = cherrypy.request.body.read(length).decode("utf-8")
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
- 
 if __name__ == '__main__':
-    stop_run_continuously = run_continuously()
     bot.delete_webhook()
     bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
-    cherrypy.config.update({
-        'server.socket_host': '127.0.0.1',
-        'server.socket_port': 7771,
-        'engine.autoreload.on': False
-    })
-
+    stop_run_continuously = run_continuously()
+    cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
+    stop_run_continuously.set()
