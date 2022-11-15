@@ -15,7 +15,6 @@ class WebhookServer(object):
             if ipaddress.ip_address(current_ip) in current_subnet:
                 return True
         raise cherrypy.HTTPError(403, "Forbidden")
-        return False
 
     @cherrypy.expose
     def index(self):
