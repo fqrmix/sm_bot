@@ -3,6 +3,8 @@ import time
 import locale
 import datetime
 import schedule
+import cherrypy
+import telebot
 from isdayoff import DateType
 from sm_bot.config import config
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
@@ -87,12 +89,22 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
     chat_id=config.GROUP_CHAT_ID_POISK
 )
 
-############################
-## Start infinity polling ##
-############################
-
+class WebhookServer(object):
+    @cherrypy.expose
+    def index(self):
+        length = int(cherrypy.request.headers['content-length'])
+        json_string = cherrypy.request.body.read(length).decode("utf-8")
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+ 
 if __name__ == '__main__':
     stop_run_continuously = run_continuously()
-    bot.infinity_polling()
-    stop_run_continuously.set()
+    bot.delete_webhook()
+    bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
+    cherrypy.config.update({
+        'server.socket_host': '127.0.0.1',
+        'server.socket_port': 7771,
+        'engine.autoreload.on': False
+    })
 
