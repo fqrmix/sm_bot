@@ -10,6 +10,7 @@ test_src*
 test*
 
 # Env files
+env
 sm_bot_venv
 sm_bot_env
 employers*.csv

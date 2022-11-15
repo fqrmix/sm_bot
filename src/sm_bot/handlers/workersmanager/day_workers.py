@@ -4,7 +4,8 @@ import sm_bot.config.config as config
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
 from sm_bot.handlers.workersmanager.employees import Employees
-
+from isdayoff import DateType, ProdCalendar
+import asyncio
 
 
 ###################
@@ -13,20 +14,19 @@ from sm_bot.handlers.workersmanager.employees import Employees
 
 
 class DayWorkers(Employees):
-    def __init__(self, current_day=None) -> None:
+    def __init__(self, current_day=None):
         super().__init__()
         if current_day is None:
             self.current_day = str(datetime.date.today().day)
-            self.week_day = datetime.date.today().isoweekday()
+            self.isdayoff = self.get_dayoff_info(datetime.date.today())
         else:
             self.current_day = current_day
             now = datetime.datetime.now()
-
-            past_week_day = datetime.date(
+            past_date = datetime.date(
                 year=now.year,
                 month=now.month,
-                day=int(current_day)).isoweekday()
-            self.week_day = past_week_day
+                day=int(current_day))
+            self.isdayoff = self.get_dayoff_info(past_date)
     
         self.workers_list = []
 
@@ -43,7 +43,7 @@ class DayWorkers(Employees):
                     actual_employee['chat']['state'] = True
                 self.workers_list.append(actual_employee)
 
-        if self.week_day in range(1,6):
+        if self.isdayoff is DateType.WORKING:
             for current_employer in self.fulltime_employees:
                 if current_employer['shifts']['Any'] != '' \
                 and current_employer['shifts']['Any'] != 'ОТ':
@@ -172,3 +172,17 @@ class DayWorkers(Employees):
                     f"[{employee['name']}](tg://user?id={employee['telegram_id']})\n"\
                 
         return text_message
+
+    @staticmethod
+    def get_dayoff_info(date: datetime.date) -> DateType:
+
+        async def async_coroutine():
+            calendar = ProdCalendar()
+            is_working_day = await calendar.date(date)
+            await calendar.close()
+            return is_working_day
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        return loop.run_until_complete(async_coroutine())

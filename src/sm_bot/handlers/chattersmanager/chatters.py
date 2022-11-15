@@ -52,7 +52,12 @@ class Chatters(DayWorkers):
                 text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
                                 f" | `{actual_employer_group}`\n"
             logger.info(msg=f"[chatters] Chatters string was created. Subject: {text_message}")
-            return text_message
+            if text_message != '':
+                return text_message
+            else:
+                text_message = 'По графику - никого. Добавить сотрудника'\
+                            ' в чат можно командой /addchatter'
+                return text_message
         except Exception as error:
             logger.error(error, exc_info = True)
 
@@ -82,7 +87,7 @@ class Chatters(DayWorkers):
                         chattter_menu_button_list.append(button)
                 back_button = types.InlineKeyboardButton(
                             text = '<< Отмена', 
-                            callback_data = 'cancel')
+                            callback_data = 'chatters_cancel')
                 chattter_menu_button_list.append(back_button)
                 keyboard.add(*chattter_menu_button_list)
                 return keyboard
