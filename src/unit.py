@@ -85,7 +85,7 @@ class TestChatters(unittest.TestCase):
         self.chatters = Chatters()
     
     def test_chatters_init(self):
-        self.assertNotEqual(self.chatters.chatter_list, [])
+        self.assertIsNotNone(self.chatters.chatter_list)
 
     def test_chatter_list_job(self):
         self.assertIsNotNone(self.chatters.chatter_list_job('966243980'))
@@ -97,17 +97,15 @@ class TestSubscribtion(unittest.TestCase):
 
     def test_sending_job(self):
         for employee in self.dayworkers.employees:
-            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' + self.dayworkers.current_day)
-            print(employee['name'])
-            actual_employee = self.dayworkers.create_actual_employee(
-                    employee, 
-                    self.dayworkers.current_day
-                    )
-            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'  + actual_employee)
-            self.assertIsNotNone(self.subscription.__sending_job__(
-                actual_employee
-            ))
-    
+            if employee['name'] == 'Сергеев Семен':
+                print(employee)
+                actual_employee = self.dayworkers.create_actual_employee(
+                        employee, 
+                        self.dayworkers.current_day
+                        )
+                print(actual_employee)
+                self.assertIsNotNone(self.subscription.__sending_job__(actual_employee))
+        
     def test_create_schedule(self):
         ...
 
