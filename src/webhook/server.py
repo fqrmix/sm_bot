@@ -14,7 +14,7 @@ class WebhookServer(object):
         try:
             for current_subnet in self.trusted_subnet_list:
                 if ipaddress.ip_address(current_ip) not in current_subnet:
-                    print(current_subnet)
+                    print(current_subnet, current_ip)
                     print('Not checked!')
                     raise cherrypy.HTTPError(403, "Forbidden")
             return True
