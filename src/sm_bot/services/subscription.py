@@ -192,7 +192,7 @@ class Subscription:
             main_menu_button_list = [
                 InlineKeyboardButton(text = 'Изменить время уведомления', callback_data = 'sub_change_time'),
                 InlineKeyboardButton(text = 'Изменить параметры подписки', callback_data = 'sub_change_status'),
-                InlineKeyboardButton(text = '<< Отмена', callback_data = 'cancel')
+                InlineKeyboardButton(text = '<< Отмена', callback_data = 'sub_cancel')
             ]
             keyboard.add(*main_menu_button_list)
             return keyboard

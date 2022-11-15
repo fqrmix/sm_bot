@@ -23,7 +23,7 @@ def handle_chatter_callback(call: types.CallbackQuery, bot: TeleBot):
                 text = 'Готово, сообщение для сотрудника отправлено в соответствующий чат!', 
                 reply_markup = '')
         
-        elif call.data == 'chatter_cancel':
+        elif call.data == 'chatters_cancel':
             bot.delete_message(call.message.chat.id, call.message.message_id)
         
     except Exception as error:

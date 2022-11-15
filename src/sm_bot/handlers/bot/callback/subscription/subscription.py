@@ -75,5 +75,9 @@ def handle_sub_callback(call: types.CallbackQuery, bot: TeleBot):
                 text = text_message, 
                 reply_markup = Subscription.build_keyboard('main_sub')
             )
+
+        elif call.data == 'sub_cancel':
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+
     except Exception as error:
         logger.error(error, exc_info = True)

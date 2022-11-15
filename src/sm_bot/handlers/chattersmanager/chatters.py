@@ -101,7 +101,7 @@ class Chatters(DayWorkers):
                         chattter_menu_button_list.append(button)
                 back_button = types.InlineKeyboardButton(
                             text = '<< Отмена', 
-                            callback_data = 'cancel')
+                            callback_data = 'chatters_cancel')
                 chattter_menu_button_list.append(back_button)
                 keyboard.add(*chattter_menu_button_list)
                 return keyboard
