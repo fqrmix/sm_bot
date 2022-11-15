@@ -107,6 +107,7 @@ class DayWorkers(Employees):
                         message_id=bot_message.id
                 )
                 logger.info(msg=f"[day-workers] Workers message was successfully pinned to chatID: {chat_id}")
+            return 200
         except Exception as error:
             logger.error(error, exc_info = True)
     

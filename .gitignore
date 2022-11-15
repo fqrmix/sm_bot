@@ -16,6 +16,7 @@ sm_bot_env
 employers*.csv
 employers*.json
 .env
+env
 
 # Log files
 *.log
