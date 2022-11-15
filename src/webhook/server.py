@@ -11,13 +11,11 @@ class WebhookServer(object):
         ]
     
     def is_trusted(self, current_ip):
-        try:
-            for current_subnet in self.trusted_subnet_list:
-                if ipaddress.ip_address(current_ip) in current_subnet:
-                    return True
-            raise cherrypy.HTTPError(403, "Forbidden")
-        except cherrypy.CherryPyException:
-            return False
+        for current_subnet in self.trusted_subnet_list:
+            if ipaddress.ip_address(current_ip) in current_subnet:
+                return True
+        raise cherrypy.HTTPError(403, "Forbidden")
+        return False
 
     @cherrypy.expose
     def index(self):
