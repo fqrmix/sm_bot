@@ -19,5 +19,5 @@ class WebhookServer(object):
             update = telebot.types.Update.de_json(json_string)
             self.bot.process_new_updates([update])
             return ''
-        except cherrypy.CherryPyException as error:
-            return error
+        except cherrypy.CherryPyException:
+            raise cherrypy.HTTPRedirect("https://fqrmix.ru")
