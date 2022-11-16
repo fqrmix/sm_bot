@@ -20,6 +20,7 @@ from sm_bot.handlers.bot.callback import register_callback_handlers
 locale.setlocale(locale.LC_ALL, '')
 
 # Init
+config.SetProdConfig()
 Subscription().create_schedule()
 register_message_handlers(bot)
 register_callback_handlers(bot)
@@ -59,11 +60,11 @@ current_date = datetime.date.today()
 TODAY_EMPOYERS_TIME = "08:00"
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
-    chat_id=config.GROUP_CHAT_ID_SM
+    chat_id=config.Config.GROUP_CHAT_ID_SM
 )
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
-    chat_id=config.GROUP_CHAT_ID_POISK,
+    chat_id=config.Config.GROUP_CHAT_ID_POISK,
 )
 
 # Send chatters list message to SM/POISK chat groups
@@ -71,22 +72,22 @@ TODAY_CHATTERS_TIME = "08:30"
 if DayWorkers.get_dayoff_info(current_date) is DateType.WORKING:
     schedule.every().day.at(TODAY_CHATTERS_TIME).do(
         today_chatters.send_chatter_list,
-        chat_id=config.GROUP_CHAT_ID_SM,
+        chat_id=config.Config.GROUP_CHAT_ID_SM,
     )
     schedule.every().day.at(TODAY_CHATTERS_TIME).do(
         today_chatters.send_chatter_list, 
-        chat_id=config.GROUP_CHAT_ID_POISK,
+        chat_id=config.Config.GROUP_CHAT_ID_POISK,
     )
 
 # Send today lunch-poll message to SM/POISK chat groups
 TODAY_LUNCH_TIME = "10:00"
 schedule.every().day.at(TODAY_LUNCH_TIME).do(
     lunchquery.send_lunch_query,
-    chat_id=config.GROUP_CHAT_ID_SM
+    chat_id=config.Config.GROUP_CHAT_ID_SM
 )
 schedule.every().day.at(TODAY_LUNCH_TIME).do(
     lunchquery.send_lunch_query, 
-    chat_id=config.GROUP_CHAT_ID_POISK
+    chat_id=config.Config.GROUP_CHAT_ID_POISK
 )
 
 if __name__ == '__main__':
