@@ -19,5 +19,4 @@ src/sm_bot/data/json/employers*.json
 env
 
 # Log files
-*.log
-1321312
+# *.log
