@@ -29,3 +29,4 @@ tzdata==2022.2
 tzlocal==4.2
 urllib3==1.26.9
 vobject==0.9.6.1
+isdayoff==1.0
