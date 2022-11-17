@@ -1,6 +1,6 @@
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 from sm_bot.handlers.workersmanager.employees import Employees
-import sm_bot.config.config as config
+import sm_bot.config as config
 from sm_bot.services.bot import bot
 from sm_bot.services.logger import logger
 from telebot import types
@@ -65,12 +65,13 @@ class Chatters(DayWorkers):
         try:
             today_chatters = self.create_chatters_str()
             text_message = f"Сегодня в чатах:\n{today_chatters}"
-            bot.send_message(
+            message = bot.send_message(
                 chat_id=chat_id,
                 parse_mode='Markdown',
                 text=text_message
             )
             logger.info(f"[chatters] Chatter string was successfully sent into chatID: {chat_id}")
+            return message
         except Exception as error:
             logger.error(error, exc_info = True)
     

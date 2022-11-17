@@ -2,20 +2,33 @@ on:
   push:
     branches:
     - master
+    - dev1.5
 jobs:
   RunTest:
     name: Unit tests for sm_bot
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      
       - name: Set up Python 3.10
         uses: actions/setup-python@v3
         with:
           python-version: "3.10"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          
+      - name: 'Create env file'
+        run: |
+          cd ./src
+          touch .env
+          echo CONFIG_TYPE=${{ secrets.CONFIG_TYPE }} >> .env
+          echo TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN_TEST }} >> .env
+          echo GROUP_CHAT_ID_SM=${{ secrets.GROUP_CHAT_ID_SM }} >> .env
+          echo GROUP_CHAT_ID_POISK=${{ secrets.GROUP_CHAT_ID_POISK }} >> .env
+          
       - name: Test with unit.py
         run: |
           cd ./src && python3 unit.py

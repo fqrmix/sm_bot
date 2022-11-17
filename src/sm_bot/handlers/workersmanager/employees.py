@@ -1,16 +1,16 @@
 import csv
-import sm_bot.config.config as config
+import sm_bot.config as config
 from sm_bot.services.logger import logger
 
 class Employees:
     def __init__(self, next_month=False) -> None:
         try:
             if not next_month:
-                employees_list = self.get_employer_list(config.CSV_PATH)
+                employees_list = self.get_employer_list(config.Config.CSV_PATH)
             else:
-                employees_list = self.get_employer_list(config.NEXT_MONTH_CSV_PATH)
+                employees_list = self.get_employer_list(config.Config.NEXT_MONTH_CSV_PATH)
             logger.info(msg="[employees] Shift employees list was dumped from CSV")
-            fulltime_employees_list = self.get_employer_list(config.CSV_PATH_5_2)
+            fulltime_employees_list = self.get_employer_list(config.Config.CSV_PATH_5_2)
             logger.info(msg="[employees] Fulltime employees list was dumped from CSV")
             self.employees = []
             self.fulltime_employees = []

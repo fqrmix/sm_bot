@@ -2,7 +2,7 @@ import calendar
 import schedule
 import datetime
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-import sm_bot.config.config as config
+import sm_bot.config as config
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
 from sm_bot.handlers.workersmanager.employees import Employees
@@ -18,7 +18,7 @@ class Subscription:
     def __init__(cls, test_run=False):
         current_employee_sub = {}
         cls.active_sub_list = []
-        cls.employees_info = config.employers_info
+        cls.employees_info = config.Config.employers_info
         cls.test_run = test_run
         for employee in cls.employees_info:
             current_employee = cls.employees_info[employee]
