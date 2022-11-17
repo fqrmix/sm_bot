@@ -20,7 +20,6 @@ from sm_bot.handlers.bot.callback import register_callback_handlers
 locale.setlocale(locale.LC_ALL, '')
 
 # Init
-config.SetProdConfig()
 Subscription().create_schedule()
 register_message_handlers(bot)
 register_callback_handlers(bot)
