@@ -73,6 +73,7 @@ Also it can be used that way:
 |   |   |   |   `-- message                         [#] Bot message handlers [#]
 |   |   |   |       |-- base                            [#][#] Basic commands
 |   |   |   |       |   |-- botinit.py                      [#][#] /init command
+|   |   |   |       |   |-- csrdecoder.py                   [#][#] CSR decoding handler
 |   |   |   |       |   |-- log.py                          [#][#] /log command
 |   |   |   |       |   |-- lunch.py                        [#][#] /lunch command
 |   |   |   |       |   `-- out.py                          [#][#] /out command
@@ -105,10 +106,14 @@ Also it can be used that way:
 |   |       |-- webdav                                  [##] WebDAV service
 |   |       |   |-- client.py
 |   |       |   `-- server.py
+|   |       |-- csrlib.py                               [##] CSR decoding service
 |   |       |-- bot.py                                  [##] Bot service
 |   |       |-- logger.py                               [##] Logger service
 |   |       `-- subscription.py                         [##] Subscription service
-|   `-- main.py                                     [#] Main file [#]
+|   |-- webhook
+|   |   `-- server.py                               [##] Webhook server
+|   |-- main.py                                     [#] Main file [#]
+|   `-- unit.py                                     [#] Unit tests [#]
 |-- android_instruction.md
 |-- README.md
 `-- requirements.txt                                [#] Requirements for using

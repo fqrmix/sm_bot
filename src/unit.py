@@ -19,6 +19,8 @@ from sm_bot.handlers.bot.callback import register_callback_handlers
 # RU locale
 locale.setlocale(locale.LC_ALL, '')
 
+config.SetTestConfig()
+
 #####################
 ## Basic functions ##
 #####################
@@ -49,19 +51,19 @@ register_callback_handlers(bot)
 
 class TestBotConnection(unittest.TestCase):
     def setUp(self) -> None:
-        self.bot = telebot.TeleBot(config.TELEGRAM_TOKEN)
+        self.bot = telebot.TeleBot(config.Config.TELEGRAM_TOKEN)
 
     def test_bot_send_message(self):
         current_date = datetime.date.today()
         self.assertIsNotNone(
             self.bot.send_message(
-                chat_id=config.GROUP_CHAT_ID_SM, 
+                chat_id=config.Config.GROUP_CHAT_ID_SM, 
                 text=f'[{current_date}] Unit testing started successfully! [GROUP_CHAT_ID_SM message]'
             )
         )
         self.assertIsNotNone(
             self.bot.send_message(
-                chat_id=config.GROUP_CHAT_ID_POISK, 
+                chat_id=config.Config.GROUP_CHAT_ID_POISK, 
                 text=f'[{current_date}] Unit testing started successfully! [GROUP_CHAT_ID_POISK message]'
             )
         )
@@ -77,8 +79,8 @@ class TestDayWorkers(unittest.TestCase):
         self.assertNotEqual(self.dayworkers.split_by_group(), None)
 
     def test_workers_send_message(self):
-        self.assertEqual(self.dayworkers.send_message(chat_id=config.GROUP_CHAT_ID_SM), 200)
-        self.assertIsNotNone(self.dayworkers.send_message(chat_id=config.GROUP_CHAT_ID_POISK), 200)
+        self.assertEqual(self.dayworkers.send_message(chat_id=config.Config.GROUP_CHAT_ID_SM), 200)
+        self.assertIsNotNone(self.dayworkers.send_message(chat_id=config.Config.GROUP_CHAT_ID_POISK), 200)
 
 class TestChatters(unittest.TestCase):
     def setUp(self) -> None:
