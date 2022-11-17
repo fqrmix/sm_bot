@@ -18,7 +18,6 @@ class WebhookServer(object):
 
     @cherrypy.expose
     def index(self):
-        print(cherrypy.request)
         try:
             remote_ip = cherrypy.request.remote.ip
             if self.is_trusted(remote_ip):
@@ -30,3 +29,4 @@ class WebhookServer(object):
                 return ''
         except cherrypy.CherryPyException:
             raise cherrypy.HTTPRedirect("https://fqrmix.ru")
+
