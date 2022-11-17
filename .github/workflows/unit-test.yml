@@ -2,6 +2,7 @@ on:
   push:
     branches:
     - master
+    - dev1.5
 jobs:
   RunTest:
     name: Unit tests for sm_bot
