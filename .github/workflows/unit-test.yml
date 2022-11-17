@@ -31,4 +31,4 @@ jobs:
           
       - name: Test with unit.py
         run: |
-          python3 unit.py
+          cd ./src && python3 unit.py
