@@ -19,8 +19,6 @@ from sm_bot.handlers.bot.callback import register_callback_handlers
 # RU locale
 locale.setlocale(locale.LC_ALL, '')
 
-config.SetTestConfig()
-
 #####################
 ## Basic functions ##
 #####################
@@ -79,8 +77,8 @@ class TestDayWorkers(unittest.TestCase):
         self.assertNotEqual(self.dayworkers.split_by_group(), None)
 
     def test_workers_send_message(self):
-        self.assertEqual(self.dayworkers.send_message(chat_id=config.Config.GROUP_CHAT_ID_SM), 200)
-        self.assertIsNotNone(self.dayworkers.send_message(chat_id=config.Config.GROUP_CHAT_ID_POISK), 200)
+        self.assertIsNotNone(self.dayworkers.send_message(chat_id=config.Config.GROUP_CHAT_ID_SM))
+        self.assertIsNotNone(self.dayworkers.send_message(chat_id=config.Config.GROUP_CHAT_ID_POISK))
 
 class TestChatters(unittest.TestCase):
     def setUp(self) -> None:
@@ -89,6 +87,10 @@ class TestChatters(unittest.TestCase):
     def test_chatters_init(self):
         self.assertIsNotNone(self.chatters.chatter_list)
 
+    def test_chatter_list_send(self):
+        self.assertIsNotNone(self.chatters.send_chatter_list(chat_id=config.Config.GROUP_CHAT_ID_SM))
+        self.assertIsNotNone(self.chatters.send_chatter_list(chat_id=config.Config.GROUP_CHAT_ID_POISK))
+
     def test_chatter_list_job(self):
         self.assertIsNotNone(self.chatters.chatter_list_job('966243980'))
 
@@ -96,25 +98,19 @@ class TestSubscribtion(unittest.TestCase):
     def setUp(self) -> None:
         self.subscription = Subscription(test_run=True)
         self.dayworkers = DayWorkers()
+        self.bot = telebot.TeleBot(config.Config.TELEGRAM_TOKEN)
 
     def test_sending_job(self):
         for employee in self.dayworkers.employees:
-            if employee['name'] == 'Сергеев Семен':
-                print(employee)
-                actual_employee = self.dayworkers.create_actual_employee(
-                        employee, 
-                        self.dayworkers.current_day
-                        )
-                print(actual_employee)
-                self.assertIsNotNone(self.subscription.__sending_job__(actual_employee))
-        
-    def test_create_schedule(self):
-        ...
-
-class TestSchedule(unittest.TestCase):
-    def setUp(self) -> None:
-        ...
-        
+            actual_employee = self.dayworkers.create_actual_employee(
+                    employee, 
+                    self.dayworkers.current_day
+                    )
+            self.bot.send_message(
+                chat_id=config.Config.GROUP_CHAT_ID_POISK, 
+                text=f"{actual_employee['name']}"
+            )
+            self.assertIsNotNone(self.subscription.__sending_job__(actual_employee))
 
 ############################
 ## Start infinity polling ##

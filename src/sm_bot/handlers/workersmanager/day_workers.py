@@ -1,6 +1,6 @@
 import csv
 import datetime
-import sm_bot.config.config as config
+import sm_bot.config as config
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
 from sm_bot.handlers.workersmanager.employees import Employees
@@ -134,12 +134,12 @@ class DayWorkers(Employees):
     def create_actual_employee(current_employer, current_day):
         try:
             actual_employee_name = current_employer['name']
-            actual_employee_info = config.employers_info[actual_employee_name]
+            actual_employee_info = config.Config.employers_info[actual_employee_name]
             actual_employee_group = actual_employee_info['group']
             actual_employee_telegramid = actual_employee_info['telegram_id']
 
-            shift_start = config.working_shift[current_employer['shifts'][current_day][0]]['start']
-            shift_end = config.working_shift[current_employer['shifts'][current_day][0]]['end']
+            shift_start = config.Config.working_shift[current_employer['shifts'][current_day][0]]['start']
+            shift_end = config.Config.working_shift[current_employer['shifts'][current_day][0]]['end']
 
             actual_employee = {
                 'name': actual_employee_name,

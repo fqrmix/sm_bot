@@ -3,18 +3,25 @@ import json
 from dotenv import load_dotenv
 from sm_bot import ROOT_DIR, TEST_ROOT_DIR
 
+load_dotenv()
+
+config_type = os.environ.get('CONFIG_TYPE')
+if config_type == 'Production':
+    ROOT_DIR_PATH = ROOT_DIR
+elif config_type == 'Test':
+    ROOT_DIR_PATH = TEST_ROOT_DIR
+
+
 class Config:
-    # Get env variables
-    load_dotenv()
     TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
     GROUP_CHAT_ID_SM = int(os.environ.get('GROUP_CHAT_ID_SM'))
     GROUP_CHAT_ID_POISK = int(os.environ.get('GROUP_CHAT_ID_POISK'))
 
     # Const
-    root_dir = ROOT_DIR
-    JSON_DIR_PATH = root_dir + '/data/json/'
-    CSV_DIR_PATH = root_dir + '/data/csv/'
-    print(root_dir)
+    ROOT_DIR = ROOT_DIR_PATH
+    JSON_DIR_PATH = ROOT_DIR + '/data/json/'
+    CSV_DIR_PATH = ROOT_DIR + '/data/csv/'
+    print(ROOT_DIR)
 
     CSV_PATH = CSV_DIR_PATH + 'employers.csv'
     CSV_PATH_5_2 = CSV_DIR_PATH + 'employers_5_2.csv'
@@ -30,9 +37,4 @@ class Config:
     with open(JSON_DIR_PATH + 'employers_info.json', 'r', encoding='utf-8') as info_json:
         employers_info = json.load(info_json)
 
-class SetProdConfig(Config):
-    Config.root_dir = ROOT_DIR
 
-class SetTestConfig(Config):
-    print('Test config setted')
-    Config.root_dir = TEST_ROOT_DIR

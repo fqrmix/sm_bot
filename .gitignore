@@ -13,8 +13,8 @@ test*
 env
 sm_bot_venv
 sm_bot_env
-employers*.csv
-employers*.json
+src/sm_bot/data/csv/employers*.csv
+src/sm_bot/data/json/employers*.json
 .env
 env
 

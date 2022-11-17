@@ -1,0 +1,296 @@
+{
+    "Сергеев Семен": {
+        "telegram": "fqrmix",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": true,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Кулаков Роман": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Трушин Михаил": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Кязимов Ростислав": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Головин Дмитрий": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Беззубов Евгений": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Фролова Анна": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Цвирко Владимир": {
+        "telegram": "JesterLOL",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Погорелов Алексей": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Чернов Никита": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Кострюков Иван": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Пигалова Мария": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "",
+            "password": ""
+        }
+    },
+    "Симакина Мария": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Рыбкин Евгений": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Александров Евгений": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Базякина Мария": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "CMS",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Нянькина Ксения": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "LK",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Плаксин Юрий": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "ShopMaster",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Белоглазов Владислав": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Салахутдинов Руслан": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    },
+    "Лапшин Иван": {
+        "telegram": "",
+        "telegram_id": "966243980",
+        "group": "Poisk",
+        "subscription": {
+            "enabled": false,
+            "time_to_notify": "20:00"
+        },
+        "webdav": {
+            "name": "Work",
+            "url": "https://www.www.www",
+            "password": ""
+        }
+    }
+}

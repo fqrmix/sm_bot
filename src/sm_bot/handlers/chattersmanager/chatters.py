@@ -1,6 +1,6 @@
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 from sm_bot.handlers.workersmanager.employees import Employees
-import sm_bot.config.config as config
+import sm_bot.config as config
 from sm_bot.services.bot import bot
 from sm_bot.services.logger import logger
 from telebot import types
