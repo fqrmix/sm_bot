@@ -11,10 +11,10 @@ class Config:
     GROUP_CHAT_ID_POISK = int(os.environ.get('GROUP_CHAT_ID_POISK'))
 
     # Const
-    ROOT_DIR = ROOT_DIR
-    JSON_DIR_PATH = ROOT_DIR + '/data/json/'
-    CSV_DIR_PATH = ROOT_DIR + '/data/csv/'
-    print(ROOT_DIR)
+    root_dir = ROOT_DIR
+    JSON_DIR_PATH = root_dir + '/data/json/'
+    CSV_DIR_PATH = root_dir + '/data/csv/'
+    print(root_dir)
 
     CSV_PATH = CSV_DIR_PATH + 'employers.csv'
     CSV_PATH_5_2 = CSV_DIR_PATH + 'employers_5_2.csv'
@@ -31,8 +31,8 @@ class Config:
         employers_info = json.load(info_json)
 
 class SetProdConfig(Config):
-    ROOT_DIR = ROOT_DIR
+    Config.root_dir = ROOT_DIR
 
 class SetTestConfig(Config):
     print('Test config setted')
-    ROOT_DIR = TEST_ROOT_DIR
+    Config.root_dir = TEST_ROOT_DIR
