@@ -50,13 +50,13 @@ def handle_swapshift_callback(call: types.CallbackQuery, bot: TeleBot):
             text="*Ты успешно поменялся сменами:*\n\n"\
                 f"{shiftswapper[telegram_id].shiftswap['user_name']} | "\
                 f"*Число:* {shiftswapper[telegram_id].shiftswap['user_shift_day']} | "\
-                f"*Смена:* {config.working_shift[shiftswapper[telegram_id].shiftswap['user_shift_type'][0]]['start']} : "\
-                f"{config.working_shift[shiftswapper[telegram_id].shiftswap['user_shift_type'][0]]['end']}"
+                f"*Смена:* {config.Config.working_shift[shiftswapper[telegram_id].shiftswap['user_shift_type'][0]]['start']} : "\
+                f"{config.Config.working_shift[shiftswapper[telegram_id].shiftswap['user_shift_type'][0]]['end']}"
                 f"\n🔁🔁🔁\n"\
                 f"{shiftswapper[telegram_id].shiftswap['assistant_name']} | "\
                 f"*Число:* {shiftswapper[telegram_id].shiftswap['assistant_shift_day']} | "\
-                f"*Смена:* {config.working_shift[shiftswapper[telegram_id].shiftswap['assistant_shift_type'][0]]['start']} : "\
-                f"{config.working_shift[shiftswapper[telegram_id].shiftswap['assistant_shift_type'][0]]['end']}",
+                f"*Смена:* {config.Config.working_shift[shiftswapper[telegram_id].shiftswap['assistant_shift_type'][0]]['start']} : "\
+                f"{config.Config.working_shift[shiftswapper[telegram_id].shiftswap['assistant_shift_type'][0]]['end']}",
             reply_markup=None,
             parse_mode='markdown'
         )

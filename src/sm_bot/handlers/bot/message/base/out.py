@@ -16,7 +16,7 @@ def handle_out(message: types.Message, bot: TeleBot):
         employer_name, value = Employees.get_employer_name(
             val = str(employer_telegram_id),
             parameter = 'telegram_id',
-            my_dict = config.employers_info)
+            my_dict = config.Config.employers_info)
         if employer_name is None:
             bot.send_message(
                 chat_id = message.chat.id,

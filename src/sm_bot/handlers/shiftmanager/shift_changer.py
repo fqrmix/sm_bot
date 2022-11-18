@@ -8,7 +8,7 @@ from sm_bot.services.bot import bot
 class ShiftChanger(Employees):
     def __init__(self) -> None:
         super().__init__()
-        self.employees_info = config.employers_info
+        self.employees_info = config.Config.employers_info
         self.dayoff = {
             'name': str,
             'telegram_id': str,
@@ -83,8 +83,8 @@ class ShiftChanger(Employees):
                         elif current_shift == 'ОТ':
                             text = f"{current_day} | Отпуск"
                         else:
-                            start = config.working_shift[current_shift[0]]['start']
-                            end = config.working_shift[current_shift[0]]['end']
+                            start = config.Config.working_shift[current_shift[0]]['start']
+                            end = config.Config.working_shift[current_shift[0]]['end']
                             text = f"{current_day} | {start} - {end}"
                     else:
                         text = current_day
@@ -106,8 +106,8 @@ class ShiftChanger(Employees):
     def create_shift_buttons(self) -> list:
         main_menu_button_list = []
         text: str
-        for type in config.working_shift:
-            text = f"{config.working_shift[type]['start']} - {config.working_shift[type]['end']}"
+        for type in config.Config.working_shift:
+            text = f"{config.Config.working_shift[type]['start']} - {config.Config.working_shift[type]['end']}"
             current_button = InlineKeyboardButton(
                 text=text,
                 callback_data=f"addshift_type_{type}"
@@ -116,7 +116,7 @@ class ShiftChanger(Employees):
         return main_menu_button_list
         
     def add_dayoff(self) -> None:
-        employees = self.get_employer_list(config.CSV_PATH)
+        employees = self.get_employer_list(config.Config.CSV_PATH)
         fieldnames = []
         if self.dayoff['start'] > self.dayoff['end']:
             self.dayoff['start'], self.dayoff['end'] = self.dayoff['end'], self.dayoff['start']
@@ -127,11 +127,11 @@ class ShiftChanger(Employees):
                         if item.isdigit() and int(item) in range(self.dayoff['start'], self.dayoff['end'] + 1):
                             employee[item] = 'DO'
                         fieldnames.append(item)
-        self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
+        self.save_employees_list(path=config.Config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
         today_workers._update()
 
     def add_shift(self) -> None:
-        employees = self.get_employer_list(config.CSV_PATH)
+        employees = self.get_employer_list(config.Config.CSV_PATH)
         fieldnames = []
         for employee in employees:
             for current_obj in employee:
@@ -140,5 +140,5 @@ class ShiftChanger(Employees):
                         if item.isdigit() and int(item) == self.shift['day']:
                             employee[item] = self.shift['type']
                         fieldnames.append(item)
-        self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
+        self.save_employees_list(path=config.Config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
         today_workers._update()

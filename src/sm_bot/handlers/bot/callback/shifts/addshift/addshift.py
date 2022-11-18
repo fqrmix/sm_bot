@@ -13,8 +13,8 @@ def handle_addshift_callback(call: types.CallbackQuery, bot: TeleBot):
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
                 text=f"*Ты успешно добавил смену "\
-                    f"{config.working_shift[shiftchanger[telegram_id].shift['type'][0]]['start']} - "\
-                    f"{config.working_shift[shiftchanger[telegram_id].shift['type'][0]]['end']}*",
+                    f"{config.Config.working_shift[shiftchanger[telegram_id].shift['type'][0]]['start']} - "\
+                    f"{config.Config.working_shift[shiftchanger[telegram_id].shift['type'][0]]['end']}*",
                 reply_markup=None,
                 parse_mode='Markdown'
                 

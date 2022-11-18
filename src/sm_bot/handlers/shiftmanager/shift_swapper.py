@@ -8,7 +8,7 @@ import sm_bot.config.config as config
 class ShiftSwapper(Employees):
     def __init__(self) -> None:
         super().__init__()
-        self.employees_info = config.employers_info
+        self.employees_info = config.Config.employers_info
         self.shiftswap = {
             'user_telegram_id': str,
             'user_name': str,
@@ -51,8 +51,8 @@ class ShiftSwapper(Employees):
                             elif current_shift == 'ОТ':
                                 text = f"{current_day} | Отпуск"
                             else:
-                                start = config.working_shift[current_shift[0]]['start']
-                                end = config.working_shift[current_shift[0]]['end']
+                                start = config.Config.working_shift[current_shift[0]]['start']
+                                end = config.Config.working_shift[current_shift[0]]['end']
                                 text = f"{current_day} | {start} - {end}"
                         else:
                             text = current_day
@@ -84,8 +84,8 @@ class ShiftSwapper(Employees):
                             elif current_shift == 'ОТ':
                                 text = f"{current_day} | Отпуск"
                             else:
-                                start = config.working_shift[current_shift[0]]['start']
-                                end = config.working_shift[current_shift[0]]['end']
+                                start = config.Config.working_shift[current_shift[0]]['start']
+                                end = config.Config.working_shift[current_shift[0]]['end']
                                 text = f"{current_day} | {start} - {end}"
                         else:
                             text = current_day
@@ -99,7 +99,7 @@ class ShiftSwapper(Employees):
     def swap_shifts(self) -> None:
         try:
             fieldnames = []
-            employees = self.get_employer_list(config.CSV_PATH)
+            employees = self.get_employer_list(config.Config.CSV_PATH)
             for employee in employees:
                 for current_obj in employee:
                     if employee[current_obj] == self.shiftswap['user_name']:
@@ -131,7 +131,7 @@ class ShiftSwapper(Employees):
                                     f"Assistant shift [{self.shiftswap['assistant_name']}] was successfully replaced by "\
                                     f"[[{self.shiftswap['user_name']}]] shift: {self.shiftswap['user_shift_type']}")
                             fieldnames.append(item)
-            self.save_employees_list(path=config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
+            self.save_employees_list(path=config.Config.CSV_PATH, employees=employees, workers_fieldnames=fieldnames)
             today_workers._update()
         except Exception as error:
             logger.error(error, exc_info=True)

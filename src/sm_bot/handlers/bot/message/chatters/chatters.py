@@ -50,12 +50,12 @@ def chatter_list_job(employer_telegram_id) -> schedule.CancelJob:
         employer_name, employer_info = Employees.get_employer_name(
             val=str(employer_telegram_id),
             parameter='telegram_id', 
-            my_dict=config.employers_info
+            my_dict=config.Config.employers_info
         )
         if employer_info['group'] == 'ShopMaster':
-            chat_id = config.GROUP_CHAT_ID_SM
+            chat_id = config.Config.GROUP_CHAT_ID_SM
         elif employer_info['group'] == 'Poisk':
-            chat_id = config.GROUP_CHAT_ID_POISK
+            chat_id = config.Config.GROUP_CHAT_ID_POISK
         if chat_id is not None:
             bot.send_message(
                 chat_id = chat_id,
