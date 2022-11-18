@@ -1,8 +1,10 @@
 from telebot import types, TeleBot
 from sm_bot.services.subscription import Subscription
 from sm_bot.services.logger import logger
+from sm_bot.services.decorators import on_private_chat_only
 
 # Subscription menu
+@on_private_chat_only
 def handle_sub_menu(message: types.Message, bot: TeleBot):
     try:
         telegram_id = message.from_user.id

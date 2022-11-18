@@ -1,6 +1,7 @@
 from ast import Raise
 import datetime
 from sm_bot.handlers.workersmanager.employees import Employees
+from sm_bot.services.decorators import on_private_chat_only
 from sm_bot.services.webdav import WebDAV
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
@@ -8,6 +9,7 @@ from sm_bot.config import config
 from telebot import types, TeleBot
 
 # Loading .csv file
+@on_private_chat_only
 def handle_shift_loader(message: types.Message, bot: TeleBot):
     '''
         Telegram handler of command /load, which loading CSV file for next month.

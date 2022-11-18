@@ -69,4 +69,3 @@ def handle_lunch(message: types.Message, bot: TeleBot) -> None:
             parse_mode='markdown'
         )
         logger.error(error, exc_info = True)
-

@@ -1,5 +1,6 @@
 from telebot import types, TeleBot
 from sm_bot.services.logger import logger
+from sm_bot.services.decorators import on_private_chat_only
 
 
 # Get log n str
@@ -11,6 +12,7 @@ def get_log_str(log_name, lines):
     return result
 
 # Get log into chat
+@on_private_chat_only
 def handle_log(message: types.Message, bot: TeleBot):
     '''
         Telegram handler of command /log, which send log file into chat.

@@ -1,7 +1,9 @@
 from telebot import types, TeleBot
 from sm_bot.services.webdav import WebDAV
 from sm_bot.services.logger import logger
+from sm_bot.services.decorators import on_private_chat_only
 
+@on_private_chat_only
 def web_dav_menu(message: types.Message, bot: TeleBot):
     try:
         telegram_id = message.from_user.id
