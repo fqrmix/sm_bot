@@ -1,5 +1,6 @@
 from sm_bot.handlers.chattersmanager import *
 from sm_bot.handlers.workersmanager.employees import Employees
+from sm_bot.services.decorators import on_private_chat_only
 from sm_bot.handlers.bot.message.base import *
 from sm_bot.services.logger import logger
 from sm_bot.config import config
@@ -20,6 +21,7 @@ def handle_chatters(message: types.Message, bot: TeleBot):
         logger.error(error, exc_info = True)
 
 # Add chatter to list
+@on_private_chat_only
 def handle_add_chatters(message: types.Message, bot: TeleBot):
     try:
         today_chatters.add_chatter_message(message)
@@ -32,6 +34,7 @@ def handle_add_chatters(message: types.Message, bot: TeleBot):
         logger.error(error, exc_info = True)
 
 # Remove chatter from list
+@on_private_chat_only
 def handle_remove_chatters(message: types.Message, bot: TeleBot):
     try:
         today_chatters.remove_chatter_message(message)
