@@ -1,6 +1,6 @@
 from sm_bot.handlers.chattersmanager import *
 from sm_bot.handlers.workersmanager.employees import Employees
-from sm_bot.services.decorators import on_private_chat_only
+from sm_bot.services.decorators import on_private_chat_only, message_exception_handler
 from sm_bot.handlers.bot.message.base import *
 from sm_bot.services.logger import logger
 from sm_bot.config import config
@@ -9,42 +9,21 @@ import schedule
 import operator
 
 # Send chatters list
+@message_exception_handler
 def handle_chatters(message: types.Message, bot: TeleBot):
-    try:
-        today_chatters.send_chatter_list(message.chat.id)
-    except Exception as error:
-        bot.send_message(
-            chat_id=message.chat.id,
-            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
-            parse_mode='markdown'
-        )
-        logger.error(error, exc_info = True)
+    today_chatters.send_chatter_list(message.chat.id)
 
 # Add chatter to list
 @on_private_chat_only
+@message_exception_handler
 def handle_add_chatters(message: types.Message, bot: TeleBot):
-    try:
-        today_chatters.add_chatter_message(message)
-    except Exception as error:
-        bot.send_message(
-            chat_id=message.chat.id,
-            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
-            parse_mode='markdown'
-        )
-        logger.error(error, exc_info = True)
+    today_chatters.add_chatter_message(message)
 
 # Remove chatter from list
 @on_private_chat_only
+@message_exception_handler
 def handle_remove_chatters(message: types.Message, bot: TeleBot):
-    try:
-        today_chatters.remove_chatter_message(message)
-    except Exception as error:
-        bot.send_message(
-            chat_id=message.chat.id,
-            text='Во время обработки запроса произошла ошибка! Необходимо проверить логи.',
-            parse_mode='markdown'
-        )
-        logger.error(error, exc_info = True)
+    today_chatters.remove_chatter_message(message)
 
 # Chatter list job
 def chatter_list_job(employer_telegram_id) -> schedule.CancelJob:
