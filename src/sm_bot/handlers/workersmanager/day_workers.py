@@ -1,6 +1,6 @@
 import csv
 import datetime
-import sm_bot.config as config
+import sm_bot.config.config as config
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
 from sm_bot.handlers.workersmanager.employees import Employees
@@ -35,8 +35,8 @@ class DayWorkers(Employees):
             and current_employer['shifts'][self.current_day] != 'ОТ'\
             and current_employer['shifts'][self.current_day] != 'DO':
                 actual_employee = self.create_actual_employee(
-                    current_employer, 
-                    self.current_day
+                    current_employer = current_employer, 
+                    current_day = self.current_day
                     )
                 if len(current_employer['shifts'][self.current_day]) > 1 \
                 and current_employer['shifts'][self.current_day][1] == "ч":
@@ -48,8 +48,8 @@ class DayWorkers(Employees):
                 if current_employer['shifts']['Any'] != '' \
                 and current_employer['shifts']['Any'] != 'ОТ':
                     actual_employee = self.create_actual_employee(
-                        current_employer, 
-                        'Any'
+                        current_employer = current_employer, 
+                        current_day = 'Any'
                         )
                     self.workers_list.append(actual_employee)
         logger.info(msg=f"[day-workers] DayWorkers class was initilated.")

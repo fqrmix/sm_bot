@@ -83,7 +83,7 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
         employer_name, employer_info = Employees.get_employer_name(
             val=str(pollAnswer.user.id),
             parameter='telegram_id', 
-            my_dict=config.employers_info
+            my_dict=config.Config.employers_info
         )
         in_lunch_list = False
         for single_employee in lunchquery.lunch_list:
