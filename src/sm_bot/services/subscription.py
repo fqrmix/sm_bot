@@ -123,8 +123,9 @@ class Subscription:
             logger.error(error, exc_info = True)
 
     @classmethod
-    def create_schedule(cls) -> schedule:
+    def create_schedule(cls) -> list():
         try:
+            schedule_list = list()
             now = datetime.datetime.now()
             current_month_days = calendar.monthrange(now.year, now.month)[1]
             if datetime.date.today().day + 1 > current_month_days:
@@ -146,6 +147,8 @@ class Subscription:
                             logger.info(
                                 msg=f"[Sub] Schedule for {current_employee_sub['name']} was created," \
                                     f" time: {current_employee_sub['time_to_notify']}")
+                            schedule_list.append(actual_schedule)
+            return schedule_list
         except Exception as error:
             logger.error(error, exc_info = True)
             return None
