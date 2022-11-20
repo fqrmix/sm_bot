@@ -37,7 +37,7 @@ class Subscription:
     @classmethod
     def save_sub(cls):
         try:
-            with open(config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
+            with open(config.Config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
                 config.json.dump(cls.employees_info, info_json, indent=4, ensure_ascii=False)
             logger.info(msg="[sub] Subscription JSON info was dumped to server")
         except Exception as error:
@@ -136,8 +136,8 @@ class Subscription:
             for current_employee_sub in cls.active_sub_list:
                 for current_employee in all_employees.employees:
                     if current_employee['name'] == current_employee_sub['name']:
-                        if (current_employee['shifts'][day] != "" \
-                        and current_employee['shifts'][day] != "ОТ") or not cls.test_run:
+                        if current_employee['shifts'][day] != "" \
+                        and current_employee['shifts'][day] != "ОТ":
                             actual_employee = DayWorkers.create_actual_employee(current_employee, day)
                             actual_schedule = schedule.every().day.at(current_employee_sub['time_to_notify']).do(
                                 cls.__sending_job__,
@@ -146,7 +146,6 @@ class Subscription:
                             logger.info(
                                 msg=f"[Sub] Schedule for {current_employee_sub['name']} was created," \
                                     f" time: {current_employee_sub['time_to_notify']}")
-                            return actual_schedule
         except Exception as error:
             logger.error(error, exc_info = True)
             return None
