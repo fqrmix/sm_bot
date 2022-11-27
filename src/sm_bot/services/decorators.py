@@ -23,7 +23,7 @@ def exception_handler(func):
         except Exception as error:
             error_id = uuid.uuid4()
             bot.send_message(
-                chat_id=config.Config.GROUP_CHAT_ID_SM,
+                chat_id=966243980,
                 text=f'Во время обработки произошла ошибка!\n'\
                     f'Необходимо проверить логи.\n'\
                     f'Method name: {func.__qualname__}\n'\
