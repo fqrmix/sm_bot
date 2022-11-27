@@ -45,7 +45,6 @@ class DayWorkers(Employees):
                 and current_employer['shifts'][self.current_day][1] == "ч":
                     actual_employee['chat']['state'] = True
                 self.workers_list.append(actual_employee)
-
         if self.isdayoff is DateType.WORKING:
             for current_employer in self.fulltime_employees:
                 if current_employer['shifts']['Any'] != '' \
@@ -193,7 +192,7 @@ class DayWorkers(Employees):
             week_day = date.isoweekday()
             if week_day in range(1,6):
                 logger.info(f"[day-workers] DateType was set by day of the week - Working Day")
-                return DateType.WORKING_DAY
+                return DateType.WORKING
             else:
                 logger.info(f"[day-workers] DateType was set by day of the week - Not Working Day")
                 return DateType.NOT_WORKING

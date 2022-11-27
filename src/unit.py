@@ -73,6 +73,10 @@ class TestDayWorkers(unittest.TestCase):
     def test_dayworkers_init(self):
         self.assertNotEqual(self.dayworkers.workers_list, [])
 
+    def test_connection_to_API(self):
+        current_date = datetime.date.today()
+        self.assertIsNotNone(self.dayworkers.get_dayoff_info(current_date))
+
     def test_split_by_group(self):
         self.assertNotEqual(self.dayworkers.split_by_group(), None)
 
