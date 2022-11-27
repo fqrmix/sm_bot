@@ -183,10 +183,19 @@ class DayWorkers(Employees):
             is_working_day = await calendar.date(date)
             await calendar.close()
             return is_working_day
-        
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        return loop.run_until_complete(async_coroutine())
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(async_coroutine())
+        except Exception as error:
+            logger.warn(f"[day-workers] Request to IsDayOff API was unsuccessfull because of exception!")
+            logger.error(error, exc_info = True)
+            week_day = date.isoweekday()
+            if week_day in range(1,6):
+                logger.info(f"[day-workers] DateType was set by day of the week - Working Day")
+                return DateType.WORKING_DAY
+            else:
+                logger.info(f"[day-workers] DateType was set by day of the week - Not Working Day")
+                return DateType.NOT_WORKING
 
 
