@@ -33,7 +33,7 @@ logger_data = {
 current_date = datetime.date.today()
 if current_date.day == 1:
     trace_logger.info('[main] Time to new CSV...\nUpdating', extra=logger_data)
-    update_actual_csv(config.NEXT_MONTH_CSV_PATH, config.CSV_PATH) # Update actual CSV file
+    update_actual_csv(config.Config.NEXT_MONTH_CSV_PATH, config.Config.CSV_PATH) # Update actual CSV file
     trace_logger.info('[main] CSV file was successfully loaded! Strarting polling!', extra=logger_data)
 else:
     trace_logger.info("[main] New CSV doesn't needed! Starting polling!", extra=logger_data)

@@ -5,6 +5,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import sm_bot.config as config
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
+from sm_bot.services.decorators import exception_handler
 from sm_bot.handlers.workersmanager.employees import Employees
 from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 
@@ -15,6 +16,7 @@ from sm_bot.handlers.workersmanager.day_workers import DayWorkers
 
 class Subscription:
     @classmethod
+    @exception_handler
     def __init__(cls, test_run=False):
         current_employee_sub = {}
         cls.active_sub_list = []

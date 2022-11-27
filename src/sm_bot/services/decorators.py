@@ -1,6 +1,8 @@
 from telebot import types, TeleBot
 import uuid
 from . logger import logger
+from sm_bot.services.bot import bot
+import sm_bot.config.config as config
 
 def on_private_chat_only(send_message):
     def __wrapper(message: types.Message, bot: TeleBot):
@@ -14,15 +16,18 @@ def on_private_chat_only(send_message):
             send_message(message, bot)
     return __wrapper
 
-def message_exception_handler(func):
-    def __wrapper(message: types.Message, bot: TeleBot):
+def exception_handler(func):
+    def __wrapper(*args, **kwargs):
         try:
-            func(message, bot)
+            func(*args, **kwargs)
         except Exception as error:
             error_id = uuid.uuid4()
             bot.send_message(
-                chat_id=message.chat.id,
-                text=f'Во время обработки запроса произошла ошибка! Необходимо проверить логи.\nID: {error_id}',
+                chat_id=config.Config.GROUP_CHAT_ID_SM,
+                text=f'Во время обработки произошла ошибка!\n'\
+                    f'Необходимо проверить логи.\n'\
+                    f'Method name: {func.__qualname__}\n'\
+                    f'\nID: {error_id}\nError: {error}',
                 parse_mode='markdown'
             )
             logger.warn(f"Something went wrong! Error ID: {error_id}")

@@ -8,8 +8,8 @@ class WebDAV:
         if path is not None:
             self.employee_list = self.get_employee_list(path)
         else:
-            self.employee_list = self.get_employee_list(config.CSV_PATH)
-        self.employeеs_info = config.employers_info
+            self.employee_list = self.get_employee_list(config.Config.CSV_PATH)
+        self.employeеs_info = config.Config.employers_info
     
     def get_webdav_info(self, telegram_id):
         try:
@@ -27,7 +27,7 @@ class WebDAV:
 
     def save_info(self):
         try:
-            with open(config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
+            with open(config.Config.JSON_DIR_PATH + 'employers_info.json', 'w', encoding='utf-8') as info_json:    
                 config.json.dump(self.employeеs_info, info_json, indent=4, ensure_ascii=False)
         except Exception as error:
             logger.error(error, exc_info=True)
@@ -35,7 +35,7 @@ class WebDAV:
     def generate_calendar(self, month):
         try:
             for c_w in self.employee_list:
-                current_employee_name = c_w[config.months[str(month)]]
+                current_employee_name = c_w[config.Config.months[str(month)]]
                 current_employee_info = self.employeеs_info[current_employee_name]
                 actual_employee_login = current_employee_info['telegram']
                 actual_employee_password = current_employee_info['webdav']['password']
@@ -45,8 +45,8 @@ class WebDAV:
                 vacation_day_end = 0
                 for item in c_w:
                     if c_w[item] != '' and c_w[item] != 'ОТ' and c_w[item] != current_employee_name:
-                        shift_start = config.working_shift[c_w[item][0]]['start'].split(':')
-                        shift_end = config.working_shift[c_w[item][0]]['end'].split(':')
+                        shift_start = config.Config.working_shift[c_w[item][0]]['start'].split(':')
+                        shift_end = config.Config.working_shift[c_w[item][0]]['end'].split(':')
                         int_shift_start = int(shift_start[0])
                         int_shift_end = int(shift_end[0])
                         int_day_start = int(item)
@@ -61,7 +61,7 @@ class WebDAV:
                             time_end=int_shift_end,
                             summary='Смена'
                         )
-                        logger.info(f'[WebDAV] [{current_employee_name}] Created event for {item} of {config.months[str(month)]}')
+                        logger.info(f'[WebDAV] [{current_employee_name}] Created event for {item} of {config.Config.months[str(month)]}')
 
                     if c_w[item] == 'ОТ' and c_w[item] != current_employee_name:
                         if not vacation_flag:

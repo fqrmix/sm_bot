@@ -1,8 +1,10 @@
 import csv
 import datetime
+import uuid
 import sm_bot.config.config as config
 from sm_bot.services.logger import logger
 from sm_bot.services.bot import bot
+from sm_bot.services.decorators import exception_handler
 from sm_bot.handlers.workersmanager.employees import Employees
 from isdayoff import DateType, ProdCalendar
 import asyncio
@@ -14,6 +16,7 @@ import asyncio
 
 
 class DayWorkers(Employees):
+    @exception_handler
     def __init__(self, current_day=None):
         super().__init__()
         if current_day is None:
@@ -175,7 +178,6 @@ class DayWorkers(Employees):
 
     @staticmethod
     def get_dayoff_info(date: datetime.date) -> DateType:
-
         async def async_coroutine():
             calendar = ProdCalendar()
             is_working_day = await calendar.date(date)
@@ -186,3 +188,5 @@ class DayWorkers(Employees):
         asyncio.set_event_loop(loop)
         
         return loop.run_until_complete(async_coroutine())
+
+

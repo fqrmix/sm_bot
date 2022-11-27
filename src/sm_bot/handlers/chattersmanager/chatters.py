@@ -3,6 +3,7 @@ from sm_bot.handlers.workersmanager.employees import Employees
 import sm_bot.config as config
 from sm_bot.services.bot import bot
 from sm_bot.services.logger import logger
+from sm_bot.services.decorators import exception_handler
 from telebot import types
 import schedule
 
@@ -27,6 +28,7 @@ def get_schedule_time(option_id: int) -> str:
 ########################
 
 class Chatters(DayWorkers):
+    @exception_handler
     def __init__(self) -> None:
         super().__init__()
         self.chatter_list = []
