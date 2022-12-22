@@ -42,8 +42,8 @@ class Client:
     def create_event(self, date_start, date_end, summary, month, time_start, time_end):
         try:
             event = self.work_calendar.save_event(
-                dtstart=datetime.datetime(2022, month, date_start, time_start),
-                dtend=datetime.datetime(2022, month, date_end, time_end),
+                dtstart=datetime.datetime(2023, month, date_start, time_start),
+                dtend=datetime.datetime(2023, month, date_end, time_end),
                 summary=summary
             )
         except Exception as error:
