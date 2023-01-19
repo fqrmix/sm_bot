@@ -1,6 +1,6 @@
 from sm_bot.handlers.chattersmanager import *
 from sm_bot.handlers.workersmanager.employees import Employees
-from sm_bot.services.decorators import on_private_chat_only, exception_handler
+from sm_bot.services.decorators import on_private_chat_only, exception_handler, b2btech_only
 from sm_bot.handlers.bot.message.base import *
 from sm_bot.services.logger import logger
 from sm_bot.config import config
@@ -14,12 +14,14 @@ def handle_chatters(message: types.Message, bot: TeleBot):
     today_chatters.send_chatter_list(message.chat.id)
 
 # Add chatter to list
+@b2btech_only
 @on_private_chat_only
 @exception_handler
 def handle_add_chatters(message: types.Message, bot: TeleBot):
     today_chatters.add_chatter_message(message)
 
 # Remove chatter from list
+@b2btech_only
 @on_private_chat_only
 @exception_handler
 def handle_remove_chatters(message: types.Message, bot: TeleBot):

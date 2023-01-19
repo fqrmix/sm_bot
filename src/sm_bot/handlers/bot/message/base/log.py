@@ -1,6 +1,6 @@
 from telebot import types, TeleBot
 from sm_bot.services.logger import logger
-from sm_bot.services.decorators import on_private_chat_only
+from sm_bot.services.decorators import on_private_chat_only, admin_only
 
 
 # Get log n str
@@ -12,6 +12,7 @@ def get_log_str(log_name, lines):
     return result
 
 # Get log into chat
+@admin_only
 @on_private_chat_only
 def handle_log(message: types.Message, bot: TeleBot):
     '''

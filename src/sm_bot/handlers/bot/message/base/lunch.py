@@ -1,6 +1,7 @@
 from telebot import types, TeleBot
 from sm_bot.services.logger import logger
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from sm_bot.services.decorators import b2btech_only
 from sm_bot.services.bot import bot
 
 class LunchQuery:
@@ -53,6 +54,7 @@ class LunchQuery:
 lunchquery = LunchQuery()
 
 # Repeat lunch poll
+@b2btech_only
 def handle_lunch(message: types.Message, bot: TeleBot) -> None:
     '''
         Telegram handler of command /lunch

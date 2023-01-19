@@ -1,9 +1,10 @@
 from telebot import types, TeleBot
 from sm_bot.services.subscription import Subscription
 from sm_bot.services.logger import logger
-from sm_bot.services.decorators import on_private_chat_only
+from sm_bot.services.decorators import on_private_chat_only, b2btech_only
 
 # Subscription menu
+@b2btech_only
 @on_private_chat_only
 def handle_sub_menu(message: types.Message, bot: TeleBot):
     try:

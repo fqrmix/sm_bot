@@ -1,8 +1,9 @@
 from sm_bot.handlers.shiftmanager import *
 from sm_bot.services.logger import logger
 from telebot import types, TeleBot
-from sm_bot.services.decorators import on_private_chat_only
+from sm_bot.services.decorators import on_private_chat_only, b2btech_only
 
+@b2btech_only
 @on_private_chat_only
 def handle_dayoff_message(message: types.Message, bot: TeleBot):
     shiftchanger[str(message.from_user.id)] = ShiftChanger()

@@ -4,6 +4,32 @@ from . logger import logger
 from sm_bot.services.bot import bot
 import sm_bot.config.config as config
 
+def b2btech_only(send_message):
+    def __wrapper(message: types.Message, bot: TeleBot):
+        b2btech_user = False
+        for info in config.Config.employers_info.values():
+            if info['telegram_id'] == str(message.from_user.id):
+                b2btech_user = True
+        if not b2btech_user:
+            bot.send_message(
+                chat_id=message.chat.id, 
+                text='Эта функция предназначена только для сотрудников b2b_tech!',
+            )
+        else:
+            return send_message(message, bot)
+    return __wrapper
+
+def admin_only(send_message):
+    def __wrapper(message: types.Message, bot: TeleBot):
+        if message.from_user.id in [966243980]:
+            bot.send_message(
+                chat_id=message.chat.id, 
+                text='Эта функция предназначена только для админинстратора бота!',
+            )
+        else:
+            return send_message(message, bot)
+    return __wrapper
+
 def on_private_chat_only(send_message):
     def __wrapper(message: types.Message, bot: TeleBot):
         if message.chat.type != 'private':
@@ -13,7 +39,7 @@ def on_private_chat_only(send_message):
                 parse_mode='Markdown'
             )
         else:
-            send_message(message, bot)
+            return send_message(message, bot)
     return __wrapper
 
 def exception_handler(func):
