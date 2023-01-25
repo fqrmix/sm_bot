@@ -71,7 +71,7 @@ def load_employers_csv(message: types.Message):
                 logger.info("[load] График на следующий месяц загружен!")
                 current_month = datetime.date.today().month
                 next_month = current_month + 1 if current_month != 12 else 1
-                WebDAV(config.Config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
+                # WebDAV(config.Config.NEXT_MONTH_CSV_PATH).generate_calendar(month=next_month)
             
         except Exception as error:
             bot.send_message(
