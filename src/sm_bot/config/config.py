@@ -16,6 +16,8 @@ class Config:
     TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
     GROUP_CHAT_ID_SM = int(os.environ.get('GROUP_CHAT_ID_SM'))
     GROUP_CHAT_ID_POISK = int(os.environ.get('GROUP_CHAT_ID_POISK'))
+    GROUP_CHAT_ID_MIDDLE_MNG = int(os.environ.get('GROUP_CHAT_ID_MIDDLE_MNG'))
+    GROUP_CHAT_ID_MASS_MNG = int(os.environ.get('GROUP_CHAT_ID_MASS_MNG'))
 
     # Const
     ROOT_DIR = ROOT_DIR_PATH
@@ -37,4 +39,5 @@ class Config:
     with open(JSON_DIR_PATH + 'employers_info.json', 'r', encoding='utf-8') as info_json:
         employers_info = json.load(info_json)
 
-
+    with open(JSON_DIR_PATH + 'tech_data.json', 'r', encoding='utf-8') as tech_data_json:
+        tech_data = json.load(tech_data_json)

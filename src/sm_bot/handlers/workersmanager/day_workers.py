@@ -32,6 +32,7 @@ class DayWorkers(Employees):
             self.isdayoff = self.get_dayoff_info(past_date)
     
         self.workers_list = []
+        self.pinned_messages = config.Config.tech_data
 
         for current_employer in self.employees:
             if current_employer['shifts'][self.current_day] != '' \
@@ -104,11 +105,31 @@ class DayWorkers(Employees):
 
             logger.info(msg=f"[day-workers] Workers message was successfully send to chatID: {chat_id}")
             if current_day_text == 'Сегодня работают:':
+                if len(self.pinned_messages['pinned_messages']) > 0:
+                    for pinned_message in self.pinned_messages['pinned_messages']:
+                        if datetime.date.fromtimestamp(pinned_message['date']).day != datetime.date.today().day and\
+                            pinned_message['chat_id'] == chat_id:
+                            bot.unpin_chat_message(chat_id, pinned_message['id'])
+                            logger.info(msg=f"[day-workers] Workers message was successfully unpinned to chatID: {chat_id}, messageID: {pinned_message['id']}")
+                            self.pinned_messages['pinned_messages'] = [
+                                i for i in self.pinned_messages['pinned_messages'] \
+                                    if not (i['id'] == pinned_message['id'])
+                            ]
+                            
+
                 bot.pin_chat_message(
                         chat_id=chat_id,
                         message_id=bot_message.id
                 )
+
                 logger.info(msg=f"[day-workers] Workers message was successfully pinned to chatID: {chat_id}")
+                message_object = {
+                    'id': bot_message.id,
+                    'date': bot_message.date,
+                    'chat_id': bot_message.chat.id
+                }
+                self.pinned_messages['pinned_messages'].append(message_object)
+                self._save_pinned_messages()
             return 200
         except Exception as error:
             logger.error(error, exc_info = True)
@@ -190,11 +211,19 @@ class DayWorkers(Employees):
             logger.warn(f"[day-workers] Request to IsDayOff API was unsuccessfull because of exception!")
             logger.error(error, exc_info = True)
             week_day = date.isoweekday()
-            if week_day in range(1,6):
+            if week_day in range(1, 6):
                 logger.info(f"[day-workers] DateType was set by day of the week - Working Day")
                 return DateType.WORKING
             else:
                 logger.info(f"[day-workers] DateType was set by day of the week - Not Working Day")
                 return DateType.NOT_WORKING
+            
+    def _save_pinned_messages(self):
+        try:
+            with open(config.Config.JSON_DIR_PATH + 'tech_data.json', 'w', encoding='utf-8') as tech_data:
+                config.json.dump(self.pinned_messages, tech_data, indent=4, ensure_ascii=False)
+            logger.info(msg=f"[tech-data] Tech data (pinned_messages) JSON info was dumped to server. Subject:\n{self.pinned_messages}")
+        except Exception as error:
+            logger.error(error, exc_info = True)
 
 

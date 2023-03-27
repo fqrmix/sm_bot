@@ -55,7 +55,7 @@ def run_continuously(interval=1):
 
 current_date = datetime.date.today()
 
-# Send today employers message to SM/POISK chat groups
+# Send today employers message to SM/POISK/MNG chat groups
 TODAY_EMPOYERS_TIME = "08:00"
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
@@ -64,6 +64,14 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
     chat_id=config.Config.GROUP_CHAT_ID_POISK,
+)
+schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
+    today_workers.send_message, 
+    chat_id=config.Config.GROUP_CHAT_ID_MASS_MNG,
+)
+schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
+    today_workers.send_message, 
+    chat_id=config.Config.GROUP_CHAT_ID_MIDDLE_MNG,
 )
 
 # Send chatters list message to SM/POISK chat groups
@@ -91,11 +99,11 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
 
 if __name__ == '__main__':
     bot.delete_webhook()
-    bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
-    stop_run_continuously = run_continuously()
-    cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
-    stop_run_continuously.set()
-
+    # bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
     # stop_run_continuously = run_continuously()
-    # bot.infinity_polling()
+    # cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
     # stop_run_continuously.set()
+
+    stop_run_continuously = run_continuously()
+    bot.infinity_polling()
+    stop_run_continuously.set()
