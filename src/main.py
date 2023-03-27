@@ -100,7 +100,7 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
 # Unpin messages
 if len(config.Config.tech_data['pinned_messages']) > 0:
     for pinned_message in config.Config.tech_data['pinned_messages']:
-        if datetime.date.fromtimestamp(pinned_message['date']).day == current_date.day:
+        if datetime.date.fromtimestamp(pinned_message['date']).day != current_date.day:
             bot.unpin_chat_message(pinned_message['chat_id'], pinned_message['id'])
             logger.info(msg=f"[day-workers] Workers message was successfully unpinned to chatID: {pinned_message['chat_id']}, messageID: {pinned_message['id']}")
             config.Config.tech_data['pinned_messages'] = [
