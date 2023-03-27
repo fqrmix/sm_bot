@@ -1,3 +1,4 @@
+
 on:
   push:
     branches:
@@ -28,6 +29,8 @@ jobs:
           echo TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN_TEST }} >> .env
           echo GROUP_CHAT_ID_SM=${{ secrets.GROUP_CHAT_ID_SM }} >> .env
           echo GROUP_CHAT_ID_POISK=${{ secrets.GROUP_CHAT_ID_POISK }} >> .env
+          echo GROUP_CHAT_ID_MASS_MNG=${{ secrets.GROUP_CHAT_ID_MASS_MNG }} >> .env
+          echo GROUP_CHAT_ID_MIDDLE_MNG=${{ secrets.GROUP_CHAT_ID_MIDDLE_MNG }} >> .env
           
       - name: Test with unit.py
         run: |
