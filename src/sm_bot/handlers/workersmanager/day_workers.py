@@ -105,18 +105,6 @@ class DayWorkers(Employees):
 
             logger.info(msg=f"[day-workers] Workers message was successfully send to chatID: {chat_id}")
             if current_day_text == 'Сегодня работают:':
-                if len(self.pinned_messages['pinned_messages']) > 0:
-                    for pinned_message in self.pinned_messages['pinned_messages']:
-                        if datetime.date.fromtimestamp(pinned_message['date']).day != datetime.date.today().day and\
-                            pinned_message['chat_id'] == chat_id:
-                            bot.unpin_chat_message(chat_id, pinned_message['id'])
-                            logger.info(msg=f"[day-workers] Workers message was successfully unpinned to chatID: {chat_id}, messageID: {pinned_message['id']}")
-                            self.pinned_messages['pinned_messages'] = [
-                                i for i in self.pinned_messages['pinned_messages'] \
-                                    if not (i['id'] == pinned_message['id'])
-                            ]
-                            
-
                 bot.pin_chat_message(
                         chat_id=chat_id,
                         message_id=bot_message.id
