@@ -2,7 +2,7 @@ import cherrypy
 import ipaddress
 import telebot
 
-class WebhookServer(object):
+class WebhookServer:
     def __init__(self, bot: telebot.TeleBot) -> None:
         self.bot = bot
         self.trusted_subnet_list = [

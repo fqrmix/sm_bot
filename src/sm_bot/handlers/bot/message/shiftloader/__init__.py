@@ -1,1 +1,0 @@
-from sm_bot.handlers.bot.message.shiftloader.shiftloader import *

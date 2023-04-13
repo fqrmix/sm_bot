@@ -1,1 +1,0 @@
-from sm_bot.handlers.bot.callback.subscription.subscription import *
