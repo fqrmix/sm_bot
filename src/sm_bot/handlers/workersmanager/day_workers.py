@@ -108,7 +108,7 @@ class DayWorkers(Employees):
                 bot.pin_chat_message(
                         chat_id=chat_id,
                         message_id=bot_message.id,
-                        disable_notification=true
+                        disable_notification=True
                 )
 
                 logger.info(msg=f"[day-workers] Workers message was successfully pinned to chatID: {chat_id}")
