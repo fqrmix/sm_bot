@@ -45,7 +45,7 @@ def chatter_list_job(employer_telegram_id) -> schedule.CancelJob:
                 chat_id = chat_id,
                 parse_mode = "Markdown",
                 text = f"[{employer_name}](tg://user?id={employer_telegram_id}) скоро уйдет на обед."\
-                    f"\nРебята, подмените пожалуйста коллегу в чатах."
+                    f"\nРебята, подмените, пожалуйста, коллегу в чатах."
             )
             logger.info(msg=f"[chatter-job] Chatter job was completed for {employer_name}")
             return schedule.CancelJob
