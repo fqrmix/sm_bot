@@ -193,7 +193,7 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
 
 @app.get("/csv/shifts/")
 def get_current_shifts_csv(username: Annotated[str, Depends(get_current_credentials)]):
-    return FileResponse(USER_DATA_PATH + '/csv/example_employers.csv')
+    return FileResponse(USER_DATA_PATH + '/csv/employers.csv')
 
 def _upload_file(path: str, uploaded_file: UploadFile = File(...)):
     contents = uploaded_file.file.read()
@@ -211,7 +211,7 @@ def update_current_shifts_csv(username: Annotated[str, Depends(get_current_crede
 
 @app.get("/csv/fulltime")
 def get_current_fulltime_csv(username: Annotated[str, Depends(get_current_credentials)]):
-    return FileResponse(USER_DATA_PATH + '/csv/example_employers_5_2.csv')
+    return FileResponse(USER_DATA_PATH + '/csv/employers_5_2.csv')
 
 @app.put("/csv/fulltime/update")
 def update_current_fulltime_csv(username: Annotated[str, Depends(get_current_credentials)], uploaded_file: UploadFile = File(...)):
