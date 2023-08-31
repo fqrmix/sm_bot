@@ -1,18 +1,24 @@
-import secrets
-from collections import defaultdict
-from typing import Annotated, Union, Literal
-from pydantic import BaseModel, validator
-from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, File, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, validator
+from typing import Annotated
+from collections import defaultdict
 from time import strptime
+from io import BytesIO
+import pandas as pd
+import secrets
+import json
+
+
+from sm_bot.services.logger import logger
 
 app = FastAPI()
-
 security = HTTPBasic()
 
+USER_DATA_PATH = './sm_bot/data'
 
 def get_current_credentials(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)]
@@ -51,13 +57,12 @@ class UserItem(BaseModel):
 
     @validator('subscription_time')
     def validate_sub_time(cls, key, values):
-        if (not values['subscription_state']):
-            raise ItemValidationException('ItemValidationException - subscription_state is not true, but trying to set subscription_time')
-        try:
-            strptime(key, '%H:%M')
-            return key
-        except ValueError as e:
-            raise ItemValidationException(e)
+        if (values['subscription_state']):
+            try:
+                strptime(key, '%H:%M')
+            except ValueError as e:
+                raise ItemValidationException(e)
+        return key
 
         
     @validator('group')
@@ -98,28 +103,117 @@ async def custom_form_validation_error(request, exc):
         ),
     )
 
-@app.put("/users/")
-def update_user(user: UserItem):
+@app.get("/users/")
+def get_users(username: Annotated[str, Depends(get_current_credentials)]):
+    with open(USER_DATA_PATH + '/json/employers_info.json', "r", encoding='utf-8') as json_file:
+        json_data = json.load(json_file)
+    return json_data
+
+@app.get("/users/{user_name}")
+def get_users(username: Annotated[str, Depends(get_current_credentials)], user_name: str):
+    with open(USER_DATA_PATH + '/json/employers_info.json', "r", encoding='utf-8') as json_file:
+        json_data = json.load(json_file)
+    try:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(
+                {"username": user_name, "user_info": json_data[user_name]}
+            )
+        )
+            
+    except KeyError:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=jsonable_encoder(
+                {"status": status.HTTP_400_BAD_REQUEST, "detail": "Invalid request", "errors": f"User {user_name} doesn't exist!"}
+            )
+        )
+
+@app.put("/users/update")
+def update_user(username: Annotated[str, Depends(get_current_credentials)], user: UserItem):
+    with open(USER_DATA_PATH + '/json/employers_info.json', "r", encoding='utf-8') as json_file:
+        json_data = json.load(json_file)
+
+    try:
+        previous_user_info = json_data[user.username]
+
+    except KeyError:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=jsonable_encoder(
+                {"status": status.HTTP_400_BAD_REQUEST, "detail": "Invalid request", "errors": f"User {user.username} doesn't exist!"}
+            )
+        )
+    
+    with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
+            json_data[user.username]['telegram'] = user.telegram
+            json_data[user.username]['telegram_id'] = user.telegram_id
+            json_data[user.username]['group'] = user.group
+            json_data[user.username]['subscription']['enabled'] = user.subscription_state
+            json_data[user.username]['subscription']['time_to_notify'] = user.subscription_time
+
+            logger.info(msg=f"[smbot-api] User info was successfully updated. Updated user info: {json_data[user.username]}")
+
+            json.dump(json_data, json_file, indent=4, ensure_ascii=False)
+
+            return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content=jsonable_encoder(
+                        {"msg": "User info was successfully updated", "updated_user_info": json_data[user.username]}
+                    )
+                )
+@app.post("/users/add")
+def add_user(username: Annotated[str, Depends(get_current_credentials)], user: UserItem):
+    with open(USER_DATA_PATH + '/json/employers_info.json', "r", encoding='utf-8') as json_file:
+        json_data = json.load(json_file)
+
+    with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
+        json_data[user.username] = {
+            'telegram': user.telegram,
+            'telegram_id': user.telegram_id,
+            'group': user.group,
+            'subscription': {
+                'enabled': user.subscription_state,
+                'time_to_notify': user.subscription_time
+            },
+            "webdav": {
+                "name": "Work",
+                "url": "https://www.www.www/",
+                "password": "None"
+            }
+        }
+        logger.info(msg=f"[smbot-api] User was successfully added. New user info: {json_data[user.username]}")
+        json.dump(json_data, json_file, indent=4, ensure_ascii=False)
+
     return user
 
-@app.post("/users/shifttype")
-def change_shift_type(username: Annotated[str, Depends(get_current_credentials)], body: dict):
-    return True
+# @app.post("/users/changeshifttype")
+# def change_shift_type(username: Annotated[str, Depends(get_current_credentials)], body: dict):
+#     return True
 
-@app.post("/users/")
-def add_user(username: Annotated[str, Depends(get_current_credentials)], body: dict):
-    return True
+@app.get("/csv/shifts/")
+def get_current_shifts_csv(username: Annotated[str, Depends(get_current_credentials)]):
+    return FileResponse(USER_DATA_PATH + '/csv/example_employers.csv')
 
-@app.delete("/users/")
-def delete_user(username: Annotated[str, Depends(get_current_credentials)], body: dict):
-    return True
+def _upload_file(path: str, uploaded_file: UploadFile = File(...)):
+    contents = uploaded_file.file.read()
+    buffer = BytesIO(contents)
+    df = pd.read_csv(buffer)
+    buffer.close()
+    uploaded_file.file.close()
+    df.to_csv(path, index=False)
+    return df.to_string(index=False)
 
+@app.put("/csv/shifts/update")
+def update_current_shifts_csv(username: Annotated[str, Depends(get_current_credentials)], uploaded_file: UploadFile = File(...)):
+    new_csv = _upload_file(USER_DATA_PATH + '/csv/employers.csv' ,uploaded_file)
+    logger.info(msg=f"[smbot-api] Shift CSV file was successfully updated. New CSV:\n{new_csv}")
 
-@app.put("/shift/fulltime/")
-def update_fulltime_employee(username: Annotated[str, Depends(get_current_credentials)], body: dict):
-    return True
+@app.get("/csv/fulltime")
+def get_current_fulltime_csv(username: Annotated[str, Depends(get_current_credentials)]):
+    return FileResponse(USER_DATA_PATH + '/csv/example_employers_5_2.csv')
 
-@app.put("/shift/csv/")
-def update_current_shifts(username: Annotated[str, Depends(get_current_credentials)], body: dict):
-    return True
-
+@app.put("/csv/fulltime/update")
+def update_current_fulltime_csv(username: Annotated[str, Depends(get_current_credentials)], uploaded_file: UploadFile = File(...)):
+    new_csv = _upload_file(USER_DATA_PATH + '/csv/employers_5_2.csv' ,uploaded_file)
+    logger.info(msg=f"[smbot-api] Fulltime CSV file was successfully updated. New CSV:\n{new_csv}")
