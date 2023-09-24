@@ -1,0 +1,28 @@
+version: "3.8"
+
+
+services: 
+
+  sm_bot:
+    build: ./
+
+    container_name: shopmaster_bot_container
+
+    ports:
+      - "7771:7771" # CherryPy Server
+      - "7772:7772" # FastAPI
+
+    volumes:
+      - ../sm_bot:/usr/src/sm_bot # main dir
+      - ./logs/telegram-bot.log:/usr/src/logs/telegram-bot.log # log dir
+
+  log_viewer:
+    build: ./logs/
+
+    container_name: log_viewer_container
+
+    volumes:
+      - ./logs/:/usr/src/logs/ # main dir
+
+    ports:
+      - "7773:7773" # Log viewer

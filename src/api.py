@@ -9,6 +9,7 @@ from collections import defaultdict
 from time import strptime
 from io import BytesIO
 import pandas as pd
+import uvicorn
 import secrets
 import json
 
@@ -18,7 +19,7 @@ from sm_bot.services.logger import logger
 app = FastAPI()
 security = HTTPBasic()
 
-USER_DATA_PATH = './sm_bot/data'
+USER_DATA_PATH = './sm_bot/src/sm_bot/data'
 
 def get_current_credentials(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)]
@@ -187,10 +188,6 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
 
     return user
 
-# @app.post("/users/changeshifttype")
-# def change_shift_type(username: Annotated[str, Depends(get_current_credentials)], body: dict):
-#     return True
-
 @app.get("/csv/shifts/")
 def get_current_shifts_csv(username: Annotated[str, Depends(get_current_credentials)]):
     return FileResponse(USER_DATA_PATH + '/csv/employers.csv')
@@ -217,3 +214,14 @@ def get_current_fulltime_csv(username: Annotated[str, Depends(get_current_creden
 def update_current_fulltime_csv(username: Annotated[str, Depends(get_current_credentials)], uploaded_file: UploadFile = File(...)):
     new_csv = _upload_file(USER_DATA_PATH + '/csv/employers_5_2.csv' ,uploaded_file)
     logger.info(msg=f"[smbot-api] Fulltime CSV file was successfully updated. New CSV:\n{new_csv}")
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "api:app", 
+        host="0.0.0.0", 
+        port=7772, 
+        reload=False, 
+        log_level="debug",
+        workers=1
+    )

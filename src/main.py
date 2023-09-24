@@ -98,23 +98,23 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
 )
 
 # Unpin messages
-if len(config.Config.tech_data['pinned_messages']) > 0:
-    for pinned_message in config.Config.tech_data['pinned_messages']:
-        if datetime.date.fromtimestamp(pinned_message['date']).day != current_date.day:
-            bot.unpin_chat_message(pinned_message['chat_id'], pinned_message['id'])
-            logger.info(msg=f"[day-workers] Workers message was successfully unpinned to chatID: {pinned_message['chat_id']}, messageID: {pinned_message['id']}")
-            config.Config.tech_data['pinned_messages'] = [
-                i for i in config.Config.tech_data['pinned_messages'] \
-                    if not (i['id'] == pinned_message['id'])
-            ]
+# if len(config.Config.tech_data['pinned_messages']) > 0:
+#     for pinned_message in config.Config.tech_data['pinned_messages']:
+#         if datetime.date.fromtimestamp(pinned_message['date']).day != current_date.day:
+#             bot.unpin_chat_message(pinned_message['chat_id'], pinned_message['id'])
+#             logger.info(msg=f"[day-workers] Workers message was successfully unpinned to chatID: {pinned_message['chat_id']}, messageID: {pinned_message['id']}")
+#             config.Config.tech_data['pinned_messages'] = [
+#                 i for i in config.Config.tech_data['pinned_messages'] \
+#                     if not (i['id'] == pinned_message['id'])
+#             ]
 
 if __name__ == '__main__':
     bot.delete_webhook()
-    bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
-    stop_run_continuously = run_continuously()
-    cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
-    stop_run_continuously.set()
-
+    # bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
     # stop_run_continuously = run_continuously()
-    # bot.infinity_polling()
+    # cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
     # stop_run_continuously.set()
+
+    stop_run_continuously = run_continuously()
+    bot.infinity_polling()
+    stop_run_continuously.set()
