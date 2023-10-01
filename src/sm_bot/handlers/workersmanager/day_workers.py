@@ -149,7 +149,8 @@ class DayWorkers(Employees):
             actual_employee_info = config.Config.employers_info[actual_employee_name]
             actual_employee_group = actual_employee_info['group']
             actual_employee_telegramid = actual_employee_info['telegram_id']
-
+            print('current day!@!!!!!' + current_day)
+            print(current_employer['shifts'][current_day])
             shift_start = config.Config.working_shift[current_employer['shifts'][current_day][0]]['start']
             shift_end = config.Config.working_shift[current_employer['shifts'][current_day][0]]['end']
 
