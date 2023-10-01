@@ -6,6 +6,7 @@ services:
     build: ./
     image: shopmaster_bot
     container_name: sm_bot
+    restart: always
     ports:
       - "7771:7771" # Webhook server
       - "7772:7772" # FastAPI

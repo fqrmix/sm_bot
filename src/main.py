@@ -110,11 +110,12 @@ schedule.every().day.at(TODAY_LUNCH_TIME).do(
 
 if __name__ == '__main__':
     bot.delete_webhook()
-    # bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
+    bot.set_webhook(url="https://webhook.fqrmix.ru/sm_bot/")
+    stop_run_continuously = run_continuously()
+    cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
+    stop_run_continuously.set()
+
     # stop_run_continuously = run_continuously()
-    # cherrypy.quickstart(server.WebhookServer(bot), '/', {'/': {}})
+    # bot.infinity_polling()
     # stop_run_continuously.set()
 
-    stop_run_continuously = run_continuously()
-    bot.infinity_polling()
-    stop_run_continuously.set()

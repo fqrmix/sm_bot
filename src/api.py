@@ -223,5 +223,6 @@ if __name__ == "__main__":
         port=7772, 
         reload=False, 
         log_level="debug",
+        root_path='/smbot/api/v1',
         workers=1
     )
