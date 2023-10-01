@@ -1,0 +1,21 @@
+version: "3.8"
+
+services: 
+
+  sm_bot:
+    build: ./
+    image: shopmaster_bot
+    container_name: sm_bot
+    ports:
+      - "7771:7771" # Webhook server
+      - "7772:7772" # FastAPI
+    volumes:
+      - ../sm_bot:/usr/src/sm_bot # main dir
+      - ./logs/telegram-bot.log:/usr/src/logs/telegram-bot.log # log dir
+    networks:
+      - docker-private-network
+
+networks:
+  docker-private-network:
+    name: docker-private-network
+    external: true
