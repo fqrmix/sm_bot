@@ -17,6 +17,13 @@ pip install -r requirements.txt
 pyhton main.py
 ```
 
+## Run in Docker with docker-compose
+```
+git clone https://github.com/fqrmix/sm_bot.git &&\
+cd sm_bot &&\
+docker compose up --build -d
+```
+
 ## Bot commands
 
 - > **/load** - Load a shedule for next month;
