@@ -19,4 +19,4 @@ src/sm_bot/data/json/employers*.json
 env
 
 # Log files
-# *.log
+ *.log
