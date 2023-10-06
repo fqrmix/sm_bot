@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: 'Create env file'
+      - name: 'Create env and log files'
         run: |
           cd ./src
           touch .env
@@ -31,6 +31,8 @@ jobs:
           echo GROUP_CHAT_ID_POISK=${{ secrets.GROUP_CHAT_ID_POISK }} >> .env
           echo GROUP_CHAT_ID_MASS_MNG=${{ secrets.GROUP_CHAT_ID_MASS_MNG }} >> .env
           echo GROUP_CHAT_ID_MIDDLE_MNG=${{ secrets.GROUP_CHAT_ID_MIDDLE_MNG }} >> .env
+          mkdir ./logs
+          touch telegram-bot.log
           
       - name: Test with unit.py
         run: |
