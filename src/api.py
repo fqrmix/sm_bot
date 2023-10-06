@@ -11,10 +11,12 @@ from io import BytesIO
 import pandas as pd
 import uvicorn
 import secrets
+import os
 import json
-
-
+from dotenv import load_dotenv
 from sm_bot.services.logger import logger
+
+load_dotenv()
 
 app = FastAPI()
 security = HTTPBasic()
@@ -25,12 +27,12 @@ def get_current_credentials(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     current_username_bytes = credentials.username.encode("utf8")
-    correct_username_bytes = b"smbot_tech"
+    correct_username_bytes = bytes(os.environ.get('API_LOGIN'), "utf8")
     is_correct_username = secrets.compare_digest(
         current_username_bytes, correct_username_bytes
     )
     current_password_bytes = credentials.password.encode("utf8")
-    correct_password_bytes = b"hPeOJX839Tq06kazzoge"
+    correct_password_bytes = bytes(os.environ.get('API_PASSWORD'), "utf8")
     is_correct_password = secrets.compare_digest(
         current_password_bytes, correct_password_bytes
     )
