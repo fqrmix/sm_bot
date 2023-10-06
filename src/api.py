@@ -25,12 +25,12 @@ def get_current_credentials(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     current_username_bytes = credentials.username.encode("utf8")
-    correct_username_bytes = b"login"
+    correct_username_bytes = b"smbot_tech"
     is_correct_username = secrets.compare_digest(
         current_username_bytes, correct_username_bytes
     )
     current_password_bytes = credentials.password.encode("utf8")
-    correct_password_bytes = b"password"
+    correct_password_bytes = b"hPeOJX839Tq06kazzoge"
     is_correct_password = secrets.compare_digest(
         current_password_bytes, correct_password_bytes
     )
@@ -148,7 +148,7 @@ def update_user(username: Annotated[str, Depends(get_current_credentials)], user
     
     with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
             json_data[user.username]['telegram'] = user.telegram
-            json_data[user.username]['telegram_id'] = user.telegram_id
+            json_data[user.username]['telegram_id'] = str(user.telegram_id)
             json_data[user.username]['group'] = user.group
             json_data[user.username]['subscription']['enabled'] = user.subscription_state
             json_data[user.username]['subscription']['time_to_notify'] = user.subscription_time
