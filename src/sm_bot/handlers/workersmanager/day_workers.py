@@ -77,7 +77,7 @@ class DayWorkers(Employees):
         except Exception as error:
             logger.error(error, exc_info = True)
 
-    def send_message(self, chat_id, current_day_text='Сегодня работают:') -> str:
+    def send_message(self, chat_id, pin=True, current_day_text='Сегодня работают:') -> str:
         try:
             shopmasters_list, poisk_list, others_list = self.split_by_group()
 
@@ -104,7 +104,7 @@ class DayWorkers(Employees):
             )
 
             logger.info(msg=f"[day-workers] Workers message was successfully send to chatID: {chat_id}")
-            if current_day_text == 'Сегодня работают:':
+            if pin == True and current_day_text == 'Сегодня работают:':
                 bot.pin_chat_message(
                         chat_id=chat_id,
                         message_id=bot_message.id,

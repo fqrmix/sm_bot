@@ -68,10 +68,12 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
     chat_id=config.Config.GROUP_CHAT_ID_MASS_MNG,
+    pin = False
 )
 schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
     today_workers.send_message, 
     chat_id=config.Config.GROUP_CHAT_ID_MIDDLE_MNG,
+    pin = False
 )
 
 # Send chatters list message to SM/POISK chat groups

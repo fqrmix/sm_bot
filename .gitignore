@@ -17,6 +17,8 @@ src/sm_bot/data/csv/employers*.csv
 src/sm_bot/data/json/employers*.json
 .env
 env
+tech_data.json
 
 # Log files
 *.log
+logs
