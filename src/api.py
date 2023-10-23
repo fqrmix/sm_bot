@@ -70,8 +70,8 @@ class UserItem(BaseModel):
         
     @validator('group')
     def validate_group(cls, key, values):
-        if key not in ["ShopMaster", "Poisk", "LK", "CMS"]:
-            raise ItemValidationException('ItemValidationException - group must be: "ShopMaster", "Poisk", "LK" or "CMS"')
+        if key not in ["ShopMaster", "Poisk", "LK", "CMS", "CMS & LK"]:
+            raise ItemValidationException('ItemValidationException - group must be: "ShopMaster", "Poisk", "LK", "CMS" or "CMS & LK"')
         return key
 
 
