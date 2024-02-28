@@ -3,12 +3,14 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+from webdavmediator import WebDavMediator
 from pydantic import BaseModel, validator
 from typing import Annotated
 from collections import defaultdict
 from time import strptime
 from io import BytesIO
 import pandas as pd
+
 import uvicorn
 import secrets
 import os
@@ -170,6 +172,18 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
     with open(USER_DATA_PATH + '/json/employers_info.json', "r", encoding='utf-8') as json_file:
         json_data = json.load(json_file)
 
+    if (user.generate_webdav):
+        logger.info(msg=f"[smbot-api] Users generate_webdav was true. Trying to generate webdav data")
+        try:
+            webdav_mediator = WebDavMediator(user)
+            webdav_mediator.push_user_to_webdav_server()
+            user_webdav_password = webdav_mediator.userdata.password
+        except Exception as e:
+            logger.error(msg=f"[smbot-api] Exception was caused by WebDavMediator: " + e)
+    else:
+        user_webdav_password = None
+
+
     with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
         json_data[user.username] = {
             'telegram': user.telegram,
@@ -181,8 +195,8 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
             },
             "webdav": {
                 "name": "Work",
-                "url": "https://www.www.www/",
-                "password": "None"
+                "url": f"https://webdav.fqrmix.ru/{user.telegram}/1db301ea-2157-11ed-b5e3-a4423b714ddb/",
+                "password": user_webdav_password
             }
         }
         logger.info(msg=f"[smbot-api] User was successfully added. New user info: {json_data[user.username]}")
