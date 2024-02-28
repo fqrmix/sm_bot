@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from webdavmediator import WebDavMediator
+from pydantic import BaseModel, validator
 from typing import Annotated
 from collections import defaultdict
 from time import strptime
