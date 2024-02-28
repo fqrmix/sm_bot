@@ -12,7 +12,7 @@ class WebDavUserData:
         return f"{self.username}:{self.password}"
 
 class WebDavMediator:
-    USER_DATA_PATH = './src/sm_bot/data/webdav'
+    USER_DATA_PATH = './sm_bot/src/sm_bot/data/webdav'
 
     def __init__(self, user) -> None:
         self.user = user
