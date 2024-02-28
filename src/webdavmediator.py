@@ -6,10 +6,10 @@ from sm_bot.services.logger import logger
 @dataclass
 class WebDavUserData:
     password: str
-    username: str
+    telegram: str
 
     def get_string(self):
-        return f"{self.username}:{self.password}"
+        return f"{self.telegram}:{self.password}"
 
 class WebDavMediator:
     USER_DATA_PATH = './sm_bot/src/sm_bot/data/webdav'
@@ -22,19 +22,19 @@ class WebDavMediator:
         with open(self.USER_DATA_PATH + '/users', "r", encoding='utf-8') as users_file:
             current_file = users_file.read()
 
-        if not self.userdata.username in current_file:
+        if not self.userdata.telegram in current_file:
             with open(self.USER_DATA_PATH + '/users', "a", encoding='utf-8') as users_file:
                 users_file.write('\n' + self.userdata.get_string())
             
             logger.info(f'[webdav-mediator] {self.userdata} was successfully appended to users file')
         else:
-            logger.warn(f'[webdav-mediator] {self.user.username} already exist in webdav users file')
+            logger.warn(f'[webdav-mediator] {self.user.telegram} already exist in webdav users file')
 
 
     def _generate_userdata(self) -> WebDavUserData:
         return WebDavUserData(
             password=self._generate_password(),
-            username=self.user.username
+            telegram=self.user.telegram
         )
     
     @staticmethod
