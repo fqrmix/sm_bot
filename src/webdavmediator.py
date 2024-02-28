@@ -3,8 +3,6 @@ from secrets import choice
 from string import ascii_letters, digits
 from sm_bot.services.logger import logger
 
-from api import UserItem
-
 @dataclass
 class WebDavUserData:
     password: str
@@ -16,7 +14,7 @@ class WebDavUserData:
 class WebDavMediator:
     USER_DATA_PATH = './src/sm_bot/data/webdav'
 
-    def __init__(self, user: UserItem) -> None:
+    def __init__(self, user) -> None:
         self.user = user
         self.userdata = self._generate_userdata()
 
