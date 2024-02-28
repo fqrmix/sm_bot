@@ -3,7 +3,7 @@ on:
   push:
     branches:
     - master
-    - dev1.5
+    - feature/webdav_generation
 jobs:
   RunTest:
     name: Unit tests for sm_bot
