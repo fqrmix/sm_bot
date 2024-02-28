@@ -3,12 +3,13 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, validator
+from webdavmediator import WebDavMediator
 from typing import Annotated
 from collections import defaultdict
 from time import strptime
 from io import BytesIO
 import pandas as pd
+
 import uvicorn
 import secrets
 import os
@@ -169,6 +170,14 @@ def update_user(username: Annotated[str, Depends(get_current_credentials)], user
 def add_user(username: Annotated[str, Depends(get_current_credentials)], user: UserItem):
     with open(USER_DATA_PATH + '/json/employers_info.json', "r", encoding='utf-8') as json_file:
         json_data = json.load(json_file)
+
+    if (user.generate_webdav):
+        logger.info(msg=f"[smbot-api] Users generate_webdav was true. Trying to generate webdav data")
+        try:
+            WebDavMediator(user).push_user_to_webdav_server()
+        except Exception as e:
+            logger.error(msg=f"[smbot-api] Exception was caused by WebDavMediator: " + e)
+
 
     with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
         json_data[user.username] = {

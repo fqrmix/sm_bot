@@ -13,6 +13,7 @@ services:
     volumes:
       - ../sm_bot:/usr/src/sm_bot # main dir
       - ./logs/telegram-bot.log:/usr/src/logs/telegram-bot.log # log dir
+      - /usr/docker/radicale/users:/usr/src/sm_bot/data/webdav/users # webdav data
       - /etc/localtime:/etc/localtime:ro
     networks:
       - docker-private-network
