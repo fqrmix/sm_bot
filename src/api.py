@@ -54,7 +54,7 @@ class ItemValidationException(Exception): ...
 class UserItem(BaseModel):
     username: str
     telegram: str
-    telegram_id: int
+    telegram_id: str
     group: str
     subscription_state: bool
     subscription_time: str
@@ -152,7 +152,7 @@ def update_user(username: Annotated[str, Depends(get_current_credentials)], user
     
     with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
             json_data[user.username]['telegram'] = user.telegram
-            json_data[user.username]['telegram_id'] = str(user.telegram_id)
+            json_data[user.username]['telegram_id'] = user.telegram_id
             json_data[user.username]['group'] = user.group
             json_data[user.username]['subscription']['enabled'] = user.subscription_state
             json_data[user.username]['subscription']['time_to_notify'] = user.subscription_time
@@ -199,8 +199,8 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
                 "password": user_webdav_password
             }
         }
-        logger.info(msg=f"[smbot-api] User was successfully added. New user info: {json_data[user.username]}")
         json.dump(json_data, json_file, indent=4, ensure_ascii=False)
+        logger.info(msg=f"[smbot-api] User was successfully added. New user info: {json_data[user.username]}")
 
     return user
 
