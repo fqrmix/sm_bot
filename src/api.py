@@ -17,7 +17,6 @@ import os
 import json
 from dotenv import load_dotenv
 from sm_bot.services.logger import logger
-from sm_bot.handlers.workersmanager import today_workers
 
 load_dotenv()
 
@@ -153,7 +152,7 @@ def update_user(username: Annotated[str, Depends(get_current_credentials)], user
     
     with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
             json_data[user.username]['telegram'] = user.telegram
-            json_data[user.username]['telegram_id'] = str(user.telegram_id)
+            json_data[user.username]['telegram_id'] = user.telegram_id
             json_data[user.username]['group'] = user.group
             json_data[user.username]['subscription']['enabled'] = user.subscription_state
             json_data[user.username]['subscription']['time_to_notify'] = user.subscription_time
@@ -161,7 +160,6 @@ def update_user(username: Annotated[str, Depends(get_current_credentials)], user
             logger.info(msg=f"[smbot-api] User info was successfully updated. Updated user info: {json_data[user.username]}")
 
             json.dump(json_data, json_file, indent=4, ensure_ascii=False)
-            today_workers._update()
 
             return JSONResponse(
                     status_code=status.HTTP_200_OK,
@@ -189,7 +187,7 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
     with open(USER_DATA_PATH + '/json/employers_info.json', "w", encoding='utf-8') as json_file:
         json_data[user.username] = {
             'telegram': user.telegram,
-            'telegram_id': str(user.telegram_id),
+            'telegram_id': user.telegram_id,
             'group': user.group,
             'subscription': {
                 'enabled': user.subscription_state,
@@ -202,7 +200,6 @@ def add_user(username: Annotated[str, Depends(get_current_credentials)], user: U
             }
         }
         json.dump(json_data, json_file, indent=4, ensure_ascii=False)
-        today_workers._update()
         logger.info(msg=f"[smbot-api] User was successfully added. New user info: {json_data[user.username]}")
 
     return user
@@ -223,7 +220,6 @@ def _upload_file(path: str, uploaded_file: UploadFile = File(...)):
 @app.put("/csv/shifts/update")
 def update_current_shifts_csv(username: Annotated[str, Depends(get_current_credentials)], uploaded_file: UploadFile = File(...)):
     new_csv = _upload_file(USER_DATA_PATH + '/csv/employers.csv' ,uploaded_file)
-    today_workers._update()
     logger.info(msg=f"[smbot-api] Shift CSV file was successfully updated. New CSV:\n{new_csv}")
 
 @app.get("/csv/fulltime")
@@ -233,7 +229,6 @@ def get_current_fulltime_csv(username: Annotated[str, Depends(get_current_creden
 @app.put("/csv/fulltime/update")
 def update_current_fulltime_csv(username: Annotated[str, Depends(get_current_credentials)], uploaded_file: UploadFile = File(...)):
     new_csv = _upload_file(USER_DATA_PATH + '/csv/employers_5_2.csv' ,uploaded_file)
-    today_workers._update()
     logger.info(msg=f"[smbot-api] Fulltime CSV file was successfully updated. New CSV:\n{new_csv}")
 
 
