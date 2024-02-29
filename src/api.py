@@ -54,7 +54,7 @@ class ItemValidationException(Exception): ...
 class UserItem(BaseModel):
     username: str
     telegram: str
-    telegram_id: int
+    telegram_id: str
     group: str
     subscription_state: bool
     subscription_time: str
