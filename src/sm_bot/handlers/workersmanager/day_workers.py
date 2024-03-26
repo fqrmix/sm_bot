@@ -173,7 +173,7 @@ class DayWorkers(Employees):
     def create_str(group_list):
         text_message = ''
         for employee in group_list:
-            if employee['group'] == 'CMS' or employee['group'] == 'LK':
+            if any(group_name in employee['group'] for group_name in ['CMS', 'LK']):
                 text_message += f"`{employee['shift_start']}` - `{employee['shift_end']}` | "\
                     f"[{employee['name']}](tg://user?id={employee['telegram_id']}) | "\
                     f"`{employee['group']}`\n"
