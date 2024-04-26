@@ -27,33 +27,6 @@ def handle_add_chatters(message: types.Message, bot: TeleBot):
 def handle_remove_chatters(message: types.Message, bot: TeleBot):
     today_chatters.remove_chatter_message(message)
 
-# Chatter list job
-def chatter_list_job(employer_telegram_id) -> schedule.CancelJob:
-    try:
-        chat_id = None
-        employer_name, employer_info = Employees.get_employer_name(
-            val=str(employer_telegram_id),
-            parameter='telegram_id', 
-            my_dict=config.Config.employers_info
-        )
-        if employer_info['group'] == 'ShopMaster':
-            chat_id = config.Config.GROUP_CHAT_ID_SM
-        elif employer_info['group'] == 'Poisk':
-            chat_id = config.Config.GROUP_CHAT_ID_POISK
-        if chat_id is not None:
-            bot.send_message(
-                chat_id = chat_id,
-                parse_mode = "Markdown",
-                text = f"[{employer_name}](tg://user?id={employer_telegram_id}) скоро уйдет на обед."\
-                    f"\nРебята, подмените, пожалуйста, коллегу в чатах."
-            )
-            logger.info(msg=f"[chatter-job] Chatter job was completed for {employer_name}")
-            return schedule.CancelJob
-        else:
-            return schedule.CancelJob
-    except Exception as error:
-        logger.error(error, exc_info = True)
-
 # Auto-out for lunch
 def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
     if len(pollAnswer.option_ids) == 0:
@@ -95,7 +68,8 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
         if (pollAnswer.option_ids[0] != 7):
             try:
                 schedule_time = get_schedule_time(pollAnswer.option_ids[0])
-                for current_chatter in today_chatters.chatter_list:
+                chatters_to_notify = list(filter(lambda x: today_chatters.chatter_list.count(x['group'] == 1), today_chatters.chatter_list))
+                for current_chatter in chatters_to_notify:
                     if current_chatter['telegram_id'] == str(pollAnswer.user.id):
                         logger.info(f"[poll-answer-handler] User [{employer_name} | ID: {pollAnswer.user.id}] was found in chatter list\n"\
                             f"Subject: {today_chatters.chatter_list}")
@@ -105,7 +79,7 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
                             logger.info(f'[poll-answer-handler] Previous schedule for user [{employer_name} | ID: {pollAnswer.user.id}] was removed')
                         try:
                             schedule.every().day.at(schedule_time).do(
-                                chatter_list_job,
+                                today_chatters.chatter_list_job,
                                 employer_telegram_id = pollAnswer.user.id
                             ).tag(str(pollAnswer.user.id))
                         except Exception as error:
