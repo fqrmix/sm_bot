@@ -50,9 +50,9 @@ class Chatters(DayWorkers):
 
             # TODO: Костыль, позже переделать
             text_message += f"[Головин Дмитрий](tg://user?id=351615249)"\
-                                f" | `ShopMaster` | `Вспомогательный`\n"
+                                f" | `ShopMaster` | Вспомогательный\n"
             text_message += f"[Калинин Владимир](tg://user?id=361925429)"\
-                                f" | `ShopMaster` | `Вспомогательный`\n"
+                                f" | `ShopMaster` | Вспомогательный\n"
             
             if len(self.chatter_list) == 0:
                 text_message += 'По графику - никого. Добавить сотрудника'\
