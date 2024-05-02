@@ -47,19 +47,30 @@ class Chatters(DayWorkers):
     def create_chatters_str(self) -> str:
         try:
             text_message = ''
-            for current_chatter in self.chatter_list:
-                actual_employer_name = current_chatter['name']
-                actual_employer_group = current_chatter['group']
-                actual_employer_telegramid = current_chatter['telegram_id']
-                text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
-                                f" | `{actual_employer_group}`\n"
-            logger.info(msg=f"[chatters] Chatters string was created. Subject: {text_message}")
-            if text_message != '':
-                return text_message
-            else:
-                text_message = 'По графику - никого. Добавить сотрудника'\
+
+            # TODO: Костыль, позже переделать
+            text_message += f"[Головин Дмитрий](tg://user?id=351615249)"\
+                                f" | `ShopMaster` | `Вспомогательный`\n"
+            text_message += f"[Калинин Владимир](tg://user?id=361925429)"\
+                                f" | `ShopMaster` | `Вспомогательный`\n"
+            
+            if len(self.chatter_list) == 0:
+                text_message += 'По графику - никого. Добавить сотрудника'\
                             ' в чат можно командой /addchatter'
-                return text_message
+            
+            else:
+                for current_chatter in self.chatter_list:
+                    actual_employer_name = current_chatter['name']
+                    actual_employer_group = current_chatter['group']
+                    actual_employer_telegramid = current_chatter['telegram_id']
+                    text_message += f"[{actual_employer_name}](tg://user?id={actual_employer_telegramid})"\
+                                    f" | `{actual_employer_group}`\n"
+                    
+                logger.info(msg=f"[chatters] Chatters string was created. Subject: {text_message}")
+
+            text_message += '\n\n * Переводить чат на вспомогательных чаттеров можно только если основного чаттера нет или у остальных нет свободных слотов'
+            return text_message
+            
         except Exception as error:
             logger.error(error, exc_info = True)
 
