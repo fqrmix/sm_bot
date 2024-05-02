@@ -50,9 +50,9 @@ class Chatters(DayWorkers):
 
             # TODO: Костыль, позже переделать
             text_message += f"[Головин Дмитрий](tg://user?id=351615249)"\
-                                f" | `ShopMaster` | Вспомогательный\n"
+                                f" | `ShopMaster` | `Вспомогательный`\n"
             text_message += f"[Калинин Владимир](tg://user?id=361925429)"\
-                                f" | `ShopMaster` | Вспомогательный\n"
+                                f" | `ShopMaster` | `Вспомогательный`\n"
             
             if len(self.chatter_list) == 0:
                 text_message += 'По графику - никого. Добавить сотрудника'\
@@ -68,7 +68,7 @@ class Chatters(DayWorkers):
                     
                 logger.info(msg=f"[chatters] Chatters string was created. Subject: {text_message}")
 
-            text_message += '\n\n * Переводить чат на вспомогательных чаттеров можно только если основного чаттера нет или у остальных нет свободных слотов'
+            text_message += '\n\n P.S. Переводить чат на вспомогательных чаттеров можно только если основного чаттера нет или у остальных нет свободных слотов'
             return text_message
             
         except Exception as error:
