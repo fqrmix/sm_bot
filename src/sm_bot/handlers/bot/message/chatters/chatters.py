@@ -27,6 +27,26 @@ def handle_add_chatters(message: types.Message, bot: TeleBot):
 def handle_remove_chatters(message: types.Message, bot: TeleBot):
     today_chatters.remove_chatter_message(message)
 
+def _get_chatters_group_count(chatter_list: list):
+    result = {
+        "ShopMaster": 0,
+        "Poisk": 0
+    }
+
+    for chatter in chatter_list:
+        result[chatter['group']] += 1
+
+    return result
+
+def _filter_chatters_list(chatter_list: list):
+    group_count = _get_chatters_group_count(chatter_list)
+    result = list()
+    for chatter in chatter_list:
+        if(group_count[chatter['group']] == 1):
+            result.append(chatter)
+    
+    return result
+
 # Auto-out for lunch
 def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
     if len(pollAnswer.option_ids) == 0:
@@ -68,8 +88,7 @@ def handle_poll_answer(pollAnswer: types.PollAnswer, bot: TeleBot) -> None:
         if (pollAnswer.option_ids[0] != 7):
             try:
                 schedule_time = get_schedule_time(pollAnswer.option_ids[0])
-                chatters_to_notify = list(filter(lambda x: today_chatters.chatter_list.count(x['group'] == 1), today_chatters.chatter_list))
-                for current_chatter in chatters_to_notify:
+                for current_chatter in _filter_chatters_list(today_chatters.chatter_list):
                     if current_chatter['telegram_id'] == str(pollAnswer.user.id):
                         logger.info(f"[poll-answer-handler] User [{employer_name} | ID: {pollAnswer.user.id}] was found in chatter list\n"\
                             f"Subject: {today_chatters.chatter_list}")
