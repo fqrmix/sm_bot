@@ -87,14 +87,6 @@ if DayWorkers.get_dayoff_info(current_date) is DateType.WORKING:
         today_chatters.send_chatter_list, 
         chat_id=config.Config.GROUP_CHAT_ID_POISK,
     )
-    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-        today_chatters.send_chatter_list, 
-        chat_id=config.Config.GROUP_CHAT_ID_MIDDLE_MNG,
-    )
-    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-        today_chatters.send_chatter_list, 
-        chat_id=config.Config.GROUP_CHAT_ID_MASS_MNG,
-    )
 
 # Send today lunch-poll message to SM/POISK chat groups
 TODAY_LUNCH_TIME = "10:00"

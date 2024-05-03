@@ -61,13 +61,12 @@ class Chatters(DayWorkers):
                                     f" | `{actual_employer_group}`\n"
                     
                 logger.info(msg=f"[chatters] Chatters string was created. Subject: {text_message}")
+
             # TODO: Костыль, позже переделать
             text_message += f"\n[Головин Дмитрий](tg://user?id=351615249)"\
-                                f" | `ShopMaster` | `Вспомогательный`\n"
-            text_message += f"[Калинин Владимир](tg://user?id=361925429)"\
-                                f" | `ShopMaster` | `Вспомогательный`\n"
+                            " / [Калинин Владимир](tg://user?id=361925429)"\
+                                f" | `ShopMaster`\n"
             
-            text_message += '\n\nP.S. Переводить чат на вспомогательных чаттеров можно только если основного чаттера нет или у остальных нет свободных слотов'
             return text_message
             
         except Exception as error:
