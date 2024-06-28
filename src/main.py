@@ -77,16 +77,16 @@ schedule.every().day.at(TODAY_EMPOYERS_TIME).do(
 )
 
 # Send chatters list message to SM/POISK chat groups
-TODAY_CHATTERS_TIME = "08:30"
-if DayWorkers.get_dayoff_info(current_date) is DateType.WORKING:
-    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-        today_chatters.send_chatter_list,
-        chat_id=config.Config.GROUP_CHAT_ID_SM,
-    )
-    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
-        today_chatters.send_chatter_list, 
-        chat_id=config.Config.GROUP_CHAT_ID_POISK,
-    )
+# TODAY_CHATTERS_TIME = "08:30"
+# if DayWorkers.get_dayoff_info(current_date) is DateType.WORKING:
+#    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+#        today_chatters.send_chatter_list,
+#        chat_id=config.Config.GROUP_CHAT_ID_SM,
+#    )
+#    schedule.every().day.at(TODAY_CHATTERS_TIME).do(
+#        today_chatters.send_chatter_list, 
+#        chat_id=config.Config.GROUP_CHAT_ID_POISK,
+#    )
 
 # Send today lunch-poll message to SM/POISK chat groups
 TODAY_LUNCH_TIME = "10:00"

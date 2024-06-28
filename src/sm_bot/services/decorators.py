@@ -21,7 +21,7 @@ def b2btech_only(send_message):
 
 def admin_only(send_message):
     def __wrapper(message: types.Message, bot: TeleBot):
-        if message.from_user.id not in [966243980, 818727118]:
+        if message.from_user.id not in [966243980, 818727118, 361925429]:
             bot.send_message(
                 chat_id=message.chat.id, 
                 text='Эта функция предназначена только для админинстратора бота!',
